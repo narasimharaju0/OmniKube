@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: omnikube-agent
+  labels:
+    app: omnikube-agent
+spec:
+  selector:
+    matchLabels:
+      app: omnikube-agent
+  template:
+    metadata:
+      labels:
+        app: omnikube-agent
+    spec:
+      containers:
+        - name: omnikube-agent
+          image: cloudmetrics-agent:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

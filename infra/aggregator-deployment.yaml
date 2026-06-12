@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnikube-aggregator
+  labels:
+    app: omnikube-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: omnikube-aggregator
+  template:
+    metadata:
+      labels:
+        app: omnikube-aggregator
+    spec:
+      containers:
+        - name: omnikube-aggregator
+          image: cloudmetrics-aggregator:latest
+          imagePullPolicy: IfNotPresent
