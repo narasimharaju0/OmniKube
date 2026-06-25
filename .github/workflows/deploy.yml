@@ -21,7 +21,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -31,24 +31,25 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Validate and smoke-test server application
+      - name: Code integrity validation
         env:
           STRIPE_SECRET_KEY: "mock_key_for_ci"
           STRIPE_WEBHOOK_SECRET: "mock_secret_for_ci"
           LOG_LEVEL: "DEBUG"
-          OMNIKUBE_DATA_DIR: "./.ci-data"
+          OMNIKUBE_DATA_DIR: "./ci-data"
+          PYTHONPATH: "."
         run: |
           python -m compileall -q .
-          python -c "import app; print('App smoke test passed successfully!')"
+          python -c "import app; print(\"Import Pass\")"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build production image (placeholder)
+      - name: Build production image
         uses: docker/build-push-action@v6
         with:
           context: ./server
-          file: ./Dockerfile.prod
+          file: ./server/Dockerfile.prod
           push: false
           tags: omnikube-server:latest
           cache-from: type=gha
