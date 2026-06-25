@@ -1,0 +1,181 @@
+# OmniKube production stack — unified K3s manifest
+# Apply: kubectl apply -f production-stack.yaml
+# Build image: docker build -f Dockerfile.prod -t omnikube:production .
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: omnikube-db-pvc
+  labels:
+    app.kubernetes.io/name: omnikube
+    app.kubernetes.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # K3s ships with the local-path provisioner by default.
+  storageClassName: local-path
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnikube-prod
+  labels:
+    app.kubernetes.io/name: omnikube
+    app.kubernetes.io/component: api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: omnikube
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: omnikube
+        app.kubernetes.io/component: api
+    spec:
+      serviceAccountName: default
+      securityContext:
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: omnikube
+          image: omnikube:production
+          imagePullPolicy: IfNotPresent
+          # app.py serves the management API and starts metrics_collector background daemons.
+          command: ["python", "-u", "app.py"]
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: FLASK_ENV
+              value: production
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: OMNIKUBE_DATA_DIR
+              value: /data
+            # Stripe billing — replace placeholders before go-live.
+            - name: STRIPE_SECRET_KEY
+              value: "sk_live_REPLACE_ME"
+            - name: STRIPE_WEBHOOK_SECRET
+              value: "whsec_REPLACE_ME"
+            - name: STRIPE_PRICE_GROWTH
+              value: "price_REPLACE_ME_GROWTH"
+            - name: STRIPE_PRICE_ENTERPRISE
+              value: "price_REPLACE_ME_ENTERPRISE"
+            - name: STRIPE_CHECKOUT_SUCCESS_URL
+              value: "https://omnikube.com/dashboard?billing=success"
+            - name: STRIPE_CHECKOUT_CANCEL_URL
+              value: "https://omnikube.com/?billing=canceled"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            # Legacy sqlite telemetry/auth store (omnikube.db).
+            - name: omnikube-db
+              mountPath: /data
+            # ORM sqlite store — same PVC root so both paths share omnikube.db.
+            - name: omnikube-db
+              mountPath: /app/.test_data
+      volumes:
+        - name: omnikube-db
+          persistentVolumeClaim:
+            claimName: omnikube-db-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: omnikube-prod-svc
+  labels:
+    app.kubernetes.io/name: omnikube
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: omnikube
+    app.kubernetes.io/component: api
+  ports:
+    - name: http
+      port: 5000
+      targetPort: http
+      protocol: TCP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: omnikube-prod-ingress
+  labels:
+    app.kubernetes.io/name: omnikube
+    app.kubernetes.io/component: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - omnikube.com
+        - www.omnikube.com
+      secretName: omnikube-tls
+  rules:
+    - host: omnikube.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omnikube-prod-svc
+                port:
+                  number: 5000
+    - host: www.omnikube.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: omnikube-prod-svc
+                port:
+                  number: 5000

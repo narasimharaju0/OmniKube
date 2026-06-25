@@ -1,0 +1,61 @@
+{{- if .Values.server.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "omnikube.fullname" . }}-server
+  labels:
+    {{- include "omnikube.server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "omnikube.server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "omnikube.server.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: omnikube-server
+          image: {{ include "omnikube.server.image" . }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: OMNIKUBE_CLUSTER_ID
+              value: {{ .Values.global.clusterId | quote }}
+            - name: OMNIKUBE_REGION
+              value: {{ .Values.global.region | quote }}
+            - name: OMNIKUBE_CPU_THRESHOLD
+              value: {{ .Values.server.thresholds.cpu | quote }}
+            - name: OMNIKUBE_MEMORY_THRESHOLD
+              value: {{ .Values.server.thresholds.memory | quote }}
+            {{- if .Values.server.env.slackWebhookUrl }}
+            - name: OMNIKUBE_SLACK_WEBHOOK_URL
+              value: {{ .Values.server.env.slackWebhookUrl | quote }}
+            {{- end }}
+            {{- if .Values.server.env.discordWebhookUrl }}
+            - name: OMNIKUBE_DISCORD_WEBHOOK_URL
+              value: {{ .Values.server.env.discordWebhookUrl | quote }}
+            {{- end }}
+            {{- if .Values.server.env.alertMockWebhookUrl }}
+            - name: OMNIKUBE_ALERT_MOCK_WEBHOOK_URL
+              value: {{ .Values.server.env.alertMockWebhookUrl | quote }}
+            {{- else }}
+            - name: OMNIKUBE_ALERT_MOCK_WEBHOOK_URL
+              value: "http://127.0.0.1:{{ .Values.server.containerPort }}/api/alerts/mock-webhook"
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.server.containerPort }}
+              protocol: TCP
+          {{- if .Values.server.persistence.enabled }}
+          volumeMounts:
+            - name: database-storage
+              mountPath: /data
+          {{- end }}
+      {{- if .Values.server.persistence.enabled }}
+      volumes:
+        - name: database-storage
+          persistentVolumeClaim:
+            claimName: omnikube-db-pvc
+      {{- end }}
+{{- end }}

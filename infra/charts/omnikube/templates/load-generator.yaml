@@ -1,0 +1,26 @@
+{{- if .Values.stress.loadGenerator.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "omnikube.fullname" . }}-load-generator
+  labels:
+    {{- include "omnikube.labels" . | nindent 4 }}
+    app.kubernetes.io/component: load-generator
+    app: load-generator
+spec:
+  containers:
+    - name: load-generator
+      image: {{ include "omnikube.stress.loadGenerator.image" . }}
+      imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+      resources:
+        {{- toYaml .Values.stress.loadGenerator.resources | nindent 8 }}
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "[Load Generator] Starting CPU burn"
+          while true; do
+            echo 'stresstest' | md5sum >/dev/null &
+            echo 'stresstest' | md5sum >/dev/null &
+            wait
+          done
+{{- end }}

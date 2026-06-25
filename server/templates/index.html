@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniKube | Autonomous Multi-Cloud FinOps Optimization</title>
+  <meta name="description" content="OmniKube delivers autonomous multi-cloud FinOps — predictive auto-throttling, cross-cloud arbitrage, and SHA-256 compliance vaults. Scale intelligently. Spend wisely." />
+  <meta name="keywords" content="FinOps, multi-cloud, cost optimization, Kubernetes, AWS, Azure, GCP, cloud arbitrage, compliance" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="/" />
+  <link rel="icon" type="image/png" href="/static/assets/logo.png">
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="OmniKube | Autonomous Multi-Cloud FinOps Optimization" />
+  <meta property="og:description" content="Predictive scaling, live cross-cloud arbitrage, and immutable audit trails — unified in one autonomous FinOps command center." />
+  <meta property="og:site_name" content="OmniKube" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="OmniKube | Autonomous Multi-Cloud FinOps Optimization" />
+  <meta name="twitter:description" content="Scale intelligently. Spend wisely. Autonomous FinOps for modern platform teams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          colors: {
+            background: "#020617",
+            foreground: "#f1f5f9",
+            brand: { DEFAULT: "#8b5cf6", dark: "#6d28d9" }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --mesh-purple: rgba(139, 92, 246, 0.42);
+      --mesh-blue: rgba(59, 130, 246, 0.32);
+      --mesh-emerald: rgba(52, 211, 153, 0.1);
+      --savings-neon: #34d399;
+      --savings-glow: rgba(52, 211, 153, 0.55);
+    }
+    .hero-aura {
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-aura::before {
+      content: "";
+      position: absolute;
+      inset: -20% -10% auto -10%;
+      height: 70%;
+      background:
+        radial-gradient(ellipse 70% 60% at 25% 0%, var(--mesh-purple), transparent 60%),
+        radial-gradient(ellipse 55% 50% at 80% 10%, var(--mesh-blue), transparent 55%),
+        radial-gradient(ellipse 40% 35% at 50% 80%, var(--mesh-emerald), transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(ellipse 75% 65% at 50% 25%, black, transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glass-nav {
+      background: rgba(2, 6, 23, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgb(30 41 59);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03) inset, 0 12px 40px rgba(0,0,0,0.35);
+    }
+    .cta-glow {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      box-shadow: 0 0 32px rgba(139, 92, 246, 0.5), 0 8px 24px rgba(0,0,0,0.4);
+      transition: filter 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .cta-glow:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+      box-shadow: 0 0 44px rgba(139, 92, 246, 0.62), 0 12px 32px rgba(0,0,0,0.45);
+    }
+    .neon-savings {
+      color: var(--savings-neon);
+      text-shadow: 0 0 24px var(--savings-glow), 0 0 48px rgba(52, 211, 153, 0.3);
+    }
+    .pricing-popular {
+      border-color: rgba(139, 92, 246, 0.55);
+      background: linear-gradient(165deg, rgba(139, 92, 246, 0.12), rgba(15, 23, 42, 0.55));
+      box-shadow: 0 0 48px rgba(139, 92, 246, 0.14);
+    }
+    .check-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.125rem;
+      height: 1.125rem;
+      border-radius: 9999px;
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+    .savings-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, rgba(139,92,246,0.35), rgba(52,211,153,0.35));
+      outline: none;
+      cursor: pointer;
+    }
+    .savings-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 1.35rem;
+      height: 1.35rem;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #8b5cf6, #34d399);
+      border: 2px solid #f8fafc;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+      cursor: pointer;
+    }
+    .savings-slider::-moz-range-thumb {
+      width: 1.35rem;
+      height: 1.35rem;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #8b5cf6, #34d399);
+      border: 2px solid #f8fafc;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+      cursor: pointer;
+    }
+    .testimonial-card {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .testimonial-card:hover {
+      border-color: rgba(139, 92, 246, 0.28);
+      box-shadow: 0 0 32px rgba(139, 92, 246, 0.08);
+    }
+    .masonry { column-count: 1; column-gap: 1rem; }
+    @media (min-width: 768px) { .masonry { column-count: 2; } }
+    @media (min-width: 1024px) { .masonry { column-count: 3; } }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+
+  <!-- SiteHeader -->
+  <header class="glass-nav fixed top-0 inset-x-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        <a href="/" class="flex items-center gap-3 shrink-0">
+          <img src="/static/assets/logo.png" class="h-8 w-auto" alt="OmniKube" />
+          <span class="hidden sm:block text-sm font-bold text-white tracking-tight">OmniKube</span>
+        </a>
+        <nav class="hidden lg:flex items-center gap-1 text-sm font-medium" aria-label="Primary">
+          <a href="#savings" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition">Savings</a>
+          <a href="#pricing" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition">Pricing</a>
+          <a href="#testimonials" class="px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition">Customers</a>
+        </nav>
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <a href="/login" class="rounded-xl px-4 py-2 text-sm font-semibold text-slate-300 border border-slate-700 hover:border-slate-500 hover:text-white transition">Sign In</a>
+          <a href="/login" class="cta-glow rounded-xl px-4 py-2 text-sm font-bold text-white hidden sm:inline-block">Start Free</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero-aura relative pt-28 pb-20 sm:pt-32 sm:pb-28 px-4 sm:px-6 lg:px-8">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="max-w-5xl mx-auto text-center relative z-10">
+        <p class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-violet-200 mb-8">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Autonomous FinOps Platform
+        </p>
+        <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
+          Autonomous Multi-Cloud FinOps.<br />
+          <span class="bg-gradient-to-r from-violet-300 via-indigo-200 to-cyan-300 bg-clip-text text-transparent">Scale Intelligently. Spend Wisely.</span>
+        </h1>
+        <p class="mt-8 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+          Predictive throttling, live cross-cloud arbitrage, and cryptographically signed compliance — unified in one command center for modern platform teams.
+        </p>
+        <div class="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/login" class="cta-glow inline-flex items-center justify-center rounded-2xl px-8 py-4 text-base font-bold text-white min-w-[220px]">
+            Start Free
+          </a>
+          <a href="#savings" class="inline-flex items-center justify-center rounded-2xl px-8 py-4 text-base font-semibold text-slate-300 border border-slate-700 hover:border-violet-500/40 hover:text-white transition min-w-[220px]">
+            Estimate Savings
+          </a>
+        </div>
+        <p class="mt-6 text-sm text-slate-500">No credit card required · Developer tier free forever</p>
+      </div>
+    </section>
+
+    <!-- SavingsSlider -->
+    <section id="savings" class="py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-800/80">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-10">
+          <p class="text-xs uppercase tracking-[0.35em] text-emerald-400 font-bold">Interactive Savings Model</p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mt-4 tracking-tight">See your potential FinOps recovery</h2>
+          <p class="text-slate-400 mt-3 font-medium">Drag the slider to model monthly cloud spend across your fleet size.</p>
+        </div>
+        <div class="glass-card rounded-2xl p-8 sm:p-10">
+          <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+              <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Estimated monthly spend</p>
+              <p id="spend-display" class="text-3xl font-bold text-white mt-1">$12,000</p>
+            </div>
+            <div class="text-left sm:text-right">
+              <p class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Projected OmniKube savings</p>
+              <p id="savings-display" class="neon-savings text-4xl sm:text-5xl font-extrabold mt-1 tracking-tight">$3,240</p>
+              <p class="text-xs text-slate-500 mt-1"><span id="savings-pct">27</span>% recovery · <span id="node-count">24</span> nodes</p>
+            </div>
+          </div>
+          <label for="savings-range" class="sr-only">Monthly cloud spend slider</label>
+          <input type="range" id="savings-range" class="savings-slider" min="2000" max="80000" step="1000" value="12000" />
+          <div class="flex justify-between text-xs text-slate-500 mt-3 font-medium">
+            <span>$2K/mo</span>
+            <span>$80K/mo</span>
+          </div>
+          <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p class="text-[10px] uppercase tracking-wider text-violet-400 font-bold">Right-Sizing</p>
+              <p id="breakdown-rightsize" class="text-lg font-bold text-white mt-1">$1,080</p>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">Arbitrage</p>
+              <p id="breakdown-arbitrage" class="text-lg font-bold text-white mt-1">$1,296</p>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+              <p class="text-[10px] uppercase tracking-wider text-cyan-400 font-bold">Throttling</p>
+              <p id="breakdown-throttle" class="text-lg font-bold text-white mt-1">$864</p>
+            </div>
+          </div>
+          <a href="/login" class="cta-glow mt-8 block text-center rounded-xl py-3.5 text-sm font-bold text-white">Start Free — Unlock Full Analysis</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <p class="text-xs uppercase tracking-[0.35em] text-violet-400 font-bold">Subscription Pricing</p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mt-4 tracking-tight">Three product layers. One autonomous platform.</h2>
+          <p class="text-slate-400 mt-4 font-medium">From solo developers to enterprise multi-region fleets.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+          <!-- Developer -->
+          <article class="glass-card rounded-2xl p-8 flex flex-col">
+            <p class="text-sm font-bold uppercase tracking-wider text-slate-400">Developer</p>
+            <p class="mt-4 flex items-baseline gap-1">
+              <span class="text-5xl font-extrabold text-white">$0</span>
+              <span class="text-slate-500 font-medium">/mo</span>
+            </p>
+            <p class="text-sm text-slate-400 mt-2">Homelab clusters and evaluation.</p>
+            <ul class="mt-8 space-y-3.5 text-sm text-slate-300 flex-1">
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>1 cluster · 7-day metrics retention</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Basic right-sizing recommendations</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Dashboard + FinOps feed access</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Community support</li>
+            </ul>
+            <a href="/login" class="mt-8 block text-center rounded-xl py-3 text-sm font-bold text-white border border-slate-600 hover:border-violet-500/50 hover:bg-violet-500/10 transition">Start Free</a>
+          </article>
+          <!-- Growth Scale -->
+          <article class="glass-card pricing-popular rounded-2xl p-8 flex flex-col relative">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">Most Popular</span>
+            <p class="text-sm font-bold uppercase tracking-wider text-violet-300">Growth Scale</p>
+            <p class="mt-4 flex items-baseline gap-1">
+              <span class="text-5xl font-extrabold text-white">$79</span>
+              <span class="text-slate-500 font-medium">/mo</span>
+            </p>
+            <p class="text-sm text-slate-400 mt-2">Growing platform teams across clouds.</p>
+            <ul class="mt-8 space-y-3.5 text-sm text-slate-300 flex-1">
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Up to 10 clusters · 90-day retention</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Predictive auto-throttling engine</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Cross-cloud arbitrage matrix</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Budget guardrails + Enterprise SSO</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Email + chat support</li>
+            </ul>
+            <a href="/login" class="cta-glow mt-8 block text-center rounded-xl py-3 text-sm font-bold text-white">Start Free</a>
+          </article>
+          <!-- Enterprise Core -->
+          <article class="glass-card rounded-2xl p-8 flex flex-col">
+            <p class="text-sm font-bold uppercase tracking-wider text-slate-400">Enterprise Core</p>
+            <p class="mt-4 flex items-baseline gap-1">
+              <span class="text-5xl font-extrabold text-white">$299</span>
+              <span class="text-slate-500 font-medium">/mo</span>
+            </p>
+            <p class="text-sm text-slate-400 mt-2">Full autonomy for regulated enterprises.</p>
+            <ul class="mt-8 space-y-3.5 text-sm text-slate-300 flex-1">
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Unlimited clusters · 1-year retention</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Immutable compliance vault ledger</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Admin override workflows</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Custom OIDC + SCIM provisioning</li>
+              <li class="flex items-start gap-3"><span class="check-icon"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Dedicated FinOps success manager</li>
+            </ul>
+            <a href="/login" class="mt-8 block text-center rounded-xl py-3 text-sm font-bold text-white border border-slate-600 hover:border-violet-500/50 hover:bg-violet-500/10 transition">Start Free</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="py-24 px-4 sm:px-6 lg:px-8 border-t border-slate-800/80">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <p class="text-xs uppercase tracking-[0.35em] text-violet-400 font-bold">Customer Testimonials</p>
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mt-4 tracking-tight">Trusted by platform leaders</h2>
+        </div>
+        <div class="masonry">
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-sm font-bold text-white">AE</div>
+              <div>
+                <p class="font-bold text-white text-sm">Alex E.</p>
+                <p class="text-xs text-slate-500">Lead DevOps · AlphaScale Global</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"OmniKube's predictive throttling caught a Black Friday spike three hours before our old alerts would have fired. We avoided a six-figure overrun without waking the on-call."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white">MR</div>
+              <div>
+                <p class="font-bold text-white text-sm">Maya R.</p>
+                <p class="text-xs text-slate-500">VP Cloud Economics · Stratosphere Labs</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"The arbitrage matrix surfaced $47K/month in Azure→GCP Spot savings we missed in our FinOps spreadsheets. Directional migration cards made exec approval trivial."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-sm font-bold text-white">JK</div>
+              <div>
+                <p class="font-bold text-white text-sm">Jordan K.</p>
+                <p class="text-xs text-slate-500">CISO · HelixGuard Systems</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"Auditors loved the SHA-256 compliance vault. Every guardrail override is cryptographically chained — we passed our SOC2 review with zero remediation items on cloud spend controls."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-sm font-bold text-white">SL</div>
+              <div>
+                <p class="font-bold text-white text-sm">Sam L.</p>
+                <p class="text-xs text-slate-500">Staff SRE · PulseRail Cloud</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"Enterprise SSO plugged into our identity provider in under ten minutes. Role-scoped dashboards mean viewers can't accidentally trigger remediations — exactly what we needed."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-sm font-bold text-white">PT</div>
+              <div>
+                <p class="font-bold text-white text-sm">Priya T.</p>
+                <p class="text-xs text-slate-500">Head of Platform · NexusChart AI</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"Growth Scale paid for itself in the first week. Right-sizing recommendations alone recovered 34% idle capacity across our staging fleet."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+          <blockquote class="testimonial-card glass-card rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-sm font-bold text-white">DW</div>
+              <div>
+                <p class="font-bold text-white text-sm">David W.</p>
+                <p class="text-xs text-slate-500">Director FinOps · ApexLedger Cloud</p>
+              </div>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">"Finally — a FinOps product that feels like a command center, not a CSV exporter. The glass dashboard alone got buy-in from our CFO on day one."</p>
+            <div class="mt-4 flex gap-1 text-amber-400 text-sm" aria-label="5 star rating">★★★★★</div>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SiteFooter -->
+  <footer class="border-t border-slate-800 bg-slate-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
+        <div class="max-w-sm">
+          <a href="/" class="inline-flex items-center gap-3">
+            <img src="/static/assets/logo.png" class="h-8 w-auto" alt="OmniKube" />
+            <span class="text-sm font-bold text-white">OmniKube</span>
+          </a>
+          <p class="text-sm text-slate-400 mt-4 leading-relaxed">Autonomous multi-cloud FinOps optimization — predictive scaling, arbitrage, and compliance in one platform.</p>
+          <a href="/login" class="cta-glow inline-flex mt-6 rounded-xl px-5 py-2.5 text-sm font-bold text-white">Start Free</a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
+          <div>
+            <p class="font-semibold text-white mb-3">Product</p>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#savings" class="hover:text-white transition">Savings Calculator</a></li>
+              <li><a href="#pricing" class="hover:text-white transition">Pricing</a></li>
+              <li><a href="/dashboard" class="hover:text-white transition">Dashboard</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="font-semibold text-white mb-3">Company</p>
+            <ul class="space-y-2 text-slate-400">
+              <li><a href="#testimonials" class="hover:text-white transition">Customers</a></li>
+              <li><a href="/login" class="hover:text-white transition">Sign In</a></li>
+            </ul>
+          </div>
+          <div>
+            <p class="font-semibold text-white mb-3">Legal</p>
+            <ul class="space-y-2 text-slate-400">
+              <li><span class="text-slate-500">Privacy</span></li>
+              <li><span class="text-slate-500">Terms</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+        <p>© 2026 OmniKube · Autonomous Multi-Cloud FinOps Optimization</p>
+        <a href="/login" class="text-slate-400 hover:text-white transition font-medium">Sign In →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function initSavingsSlider() {
+      const slider = document.getElementById("savings-range");
+      const spendEl = document.getElementById("spend-display");
+      const savingsEl = document.getElementById("savings-display");
+      const pctEl = document.getElementById("savings-pct");
+      const nodesEl = document.getElementById("node-count");
+      const rightsizeEl = document.getElementById("breakdown-rightsize");
+      const arbitrageEl = document.getElementById("breakdown-arbitrage");
+      const throttleEl = document.getElementById("breakdown-throttle");
+
+      function formatUsd(n) {
+        return "$" + n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+      }
+
+      function update() {
+        const spend = Number(slider.value);
+        const savingsRate = 0.27;
+        const savings = Math.round(spend * savingsRate);
+        const nodes = Math.max(4, Math.round(spend / 500));
+        spendEl.textContent = formatUsd(spend);
+        savingsEl.textContent = formatUsd(savings);
+        pctEl.textContent = Math.round(savingsRate * 100);
+        nodesEl.textContent = nodes;
+        rightsizeEl.textContent = formatUsd(Math.round(savings * 0.33));
+        arbitrageEl.textContent = formatUsd(Math.round(savings * 0.40));
+        throttleEl.textContent = formatUsd(Math.round(savings * 0.27));
+      }
+
+      slider.addEventListener("input", update);
+      update();
+    })();
+  </script>
+</body>
+</html>

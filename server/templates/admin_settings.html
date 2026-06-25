@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniKube | Admin Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          colors: { accent: "var(--brand-primary, #6366f1)" }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --brand-primary: #6366f1;
+      --brand-secondary: #4f46e5;
+    }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 120% 80% at 10% -10%, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 0%, rgba(52, 211, 153, 0.08), transparent 45%),
+        linear-gradient(180deg, #0b0f19 0%, #020617 100%);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+    }
+    .sidebar-glass {
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgb(30 41 59);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover { color: #e2e8f0; background: rgba(255, 255, 255, 0.04); }
+    .nav-link.active {
+      color: #fff;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent);
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn {
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn:hover { filter: brightness(1.08); }
+    .login-backdrop {
+      background: radial-gradient(ellipse 100% 80% at 50% -20%, color-mix(in srgb, var(--brand-primary) 30%, rgba(30,27,75,0.95)), rgba(2,6,23,0.98) 55%, #020617);
+    }
+    .setting-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid rgb(30 41 59);
+    }
+    .setting-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .setting-row:first-child { padding-top: 0; }
+    .toggle {
+      position: relative;
+      width: 3rem;
+      height: 1.65rem;
+      flex-shrink: 0;
+      border-radius: 9999px;
+      background: rgb(51 65 85);
+      border: 1px solid rgb(71 85 105);
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 0.2rem;
+      left: 0.2rem;
+      width: 1.15rem;
+      height: 1.15rem;
+      border-radius: 9999px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s ease;
+    }
+    .toggle.on {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.35);
+    }
+    .toggle.on::after { transform: translateX(1.35rem); }
+    .cloud-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .cloud-badge.connected {
+      color: #6ee7b7;
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+    .cloud-badge.syncing {
+      color: #fde68a;
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+    .cloud-badge.disconnected {
+      color: #fca5a5;
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+    }
+    .key-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.75rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 0.5rem;
+      background: rgba(2, 6, 23, 0.65);
+      border: 1px solid rgb(51 65 85);
+      color: #94a3b8;
+    }
+    .toast-success { border-color: rgba(52, 211, 153, 0.35); background: rgba(6, 78, 59, 0.88); color: #d1fae5; }
+    .toast-error { border-color: rgba(248, 113, 113, 0.35); background: rgba(69, 10, 10, 0.88); color: #fecaca; }
+    .toast-enter { animation: toast-in 0.25s ease forwards; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased">
+  <div id="toast-container" class="fixed top-5 right-5 z-[70] flex flex-col gap-3 max-w-sm"></div>
+
+  <div id="login-overlay" class="fixed inset-0 z-[60] login-backdrop flex items-center justify-center px-4">
+    <div class="glass w-full max-w-md rounded-2xl p-8 shadow-2xl border border-white/10">
+      <div class="text-center mb-8">
+        <div class="mx-auto mb-4 h-12 w-12 rounded-xl brand-btn flex items-center justify-center text-lg font-bold">OK</div>
+        <p class="text-xs uppercase tracking-[0.35em] text-indigo-300/80">OmniKube CloudMetrics</p>
+        <h1 class="text-2xl font-semibold mt-3 text-white">Sign in to continue</h1>
+        <p class="text-sm text-slate-400 mt-2">Admin settings require an authenticated session</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-username" class="block text-sm text-slate-300 mb-1.5">Username</label>
+          <input id="login-username" type="text" autocomplete="username" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="admin_user" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm text-slate-300 mb-1.5">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="changeme" />
+        </div>
+        <p id="login-error" class="text-sm text-red-300 min-h-[1.25rem]"></p>
+        <button type="submit" class="brand-btn w-full rounded-xl py-2.5 text-sm font-medium text-white transition">Sign In</button>
+        <a href="/auth/login?return_to=/admin/settings" class="mt-3 block w-full rounded-xl py-2.5 text-sm font-medium text-center text-indigo-100 border border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/20 transition">
+          Sign in with Enterprise SSO
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-shell" class="hidden min-h-screen">
+    <aside class="sidebar-glass fixed inset-y-0 left-0 z-50 w-64 flex flex-col p-5">
+      <div class="mb-8">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-lg brand-btn flex items-center justify-center text-sm font-bold shrink-0">OK</div>
+          <div class="min-w-0">
+            <p class="text-[10px] uppercase tracking-[0.3em] text-slate-400 truncate">OmniKube</p>
+            <p class="text-sm font-semibold text-white truncate">CloudMetrics</p>
+            <p class="text-[11px] text-slate-500 truncate">Enterprise Telemetry</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-1">
+        <a href="/dashboard" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Dashboard
+        </a>
+        <a href="/cost-optimization" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          Cost Optimization
+        </a>
+        <a href="/admin/settings" class="nav-link active">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Admin Settings
+        </a>
+      </nav>
+      <div class="mt-auto pt-4 border-t border-white/5 text-xs text-slate-500">
+        <p>OmniKube v2.0 · Admin Console</p>
+      </div>
+    </aside>
+
+    <main class="ml-64 flex-1 min-w-0 min-h-screen overflow-y-auto">
+      <header class="sticky top-0 z-40 glass-card border-b border-slate-800 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500 font-semibold">Platform Administration</p>
+          <h1 class="text-2xl md:text-3xl font-bold mt-1 tracking-tight bg-gradient-to-r from-white via-indigo-100 to-slate-400 bg-clip-text text-transparent">
+            Admin Settings
+          </h1>
+          <p class="text-slate-400 mt-1 text-sm">Structural configurations for guardrails, cloud accounts, and credential rotation.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
+            <span id="user-display" class="font-medium text-white">—</span>
+            <span class="text-slate-500 mx-1">·</span>
+            <span id="role-badge" class="text-indigo-300">—</span>
+          </div>
+          <button id="save-settings-btn" class="brand-btn rounded-xl px-4 py-2 text-sm font-medium text-white">Save Changes</button>
+          <button id="logout-button" class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-300 hover:text-white hover:border-red-400/30 transition">Sign Out</button>
+        </div>
+      </header>
+
+      <div class="p-6 space-y-6 max-w-[960px]">
+        <!-- Budget Threshold Overrides -->
+        <section class="glass-card rounded-2xl p-6">
+          <div class="flex items-start justify-between gap-4 mb-2">
+            <div>
+              <p class="text-[10px] uppercase tracking-[0.3em] text-amber-400 font-bold">FinOps Guardrails</p>
+              <h2 class="text-lg font-bold text-white mt-2 tracking-tight">Budget Threshold Overrides</h2>
+              <p class="text-sm text-slate-400 mt-2">Allow administrators to bypass monthly budget ceilings for predictive scale-up actions blocked by guardrails.</p>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Enable Admin Budget Override Path</p>
+                <p class="text-xs text-slate-500 mt-1">Exposes the orange Admin Override button on blocked predictive scale-up recommendations.</p>
+              </div>
+              <button type="button" class="toggle on" id="toggle-budget-override" role="switch" aria-checked="true" aria-label="Enable admin budget override"></button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Hard-Cap Enforcement Mode</p>
+                <p class="text-xs text-slate-500 mt-1">When enabled, all scale-up actions exceeding remaining budget are blocked until override.</p>
+              </div>
+              <button type="button" class="toggle on" id="toggle-hard-cap" role="switch" aria-checked="true" aria-label="Hard-cap enforcement"></button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Monthly Ceiling Alert Threshold</p>
+                <p class="text-xs text-slate-500 mt-1">Notify admins when spend reaches 85% of configured monthly budget ceiling.</p>
+              </div>
+              <button type="button" class="toggle" id="toggle-ceiling-alert" role="switch" aria-checked="false" aria-label="Ceiling alert threshold"></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Connected Cloud Infrastructure Accounts -->
+        <section class="glass-card rounded-2xl p-6">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.3em] text-cyan-400 font-bold">Multi-Cloud Linkage</p>
+            <h2 class="text-lg font-bold text-white mt-2 tracking-tight">Connected Cloud Infrastructure Accounts</h2>
+            <p class="text-sm text-slate-400 mt-2">Live linkage status for arbitrage matrix pricing and cross-cloud migration sequences.</p>
+          </div>
+          <div class="mt-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+              <div class="flex items-center gap-4">
+                <div class="h-11 w-11 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-xs font-bold text-orange-300">AWS</div>
+                <div>
+                  <p class="font-semibold text-white text-sm">Amazon Web Services</p>
+                  <p class="text-xs text-slate-500 mt-0.5">Account · 482910384756 · us-east-1</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="cloud-badge connected">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  Connected
+                </span>
+                <button type="button" class="toggle on" data-cloud="aws" role="switch" aria-checked="true" aria-label="AWS account linkage"></button>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+              <div class="flex items-center gap-4">
+                <div class="h-11 w-11 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-xs font-bold text-blue-300">AZ</div>
+                <div>
+                  <p class="font-semibold text-white text-sm">Microsoft Azure</p>
+                  <p class="text-xs text-slate-500 mt-0.5">Subscription · AlphaGrep-Prod · East US 2</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="cloud-badge connected">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  Connected
+                </span>
+                <button type="button" class="toggle on" data-cloud="azure" role="switch" aria-checked="true" aria-label="Azure account linkage"></button>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+              <div class="flex items-center gap-4">
+                <div class="h-11 w-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-xs font-bold text-emerald-300">GCP</div>
+                <div>
+                  <p class="font-semibold text-white text-sm">Google Cloud Platform</p>
+                  <p class="text-xs text-slate-500 mt-0.5">Project · omnikube-arbitrage · us-central1</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <span id="gcp-status-badge" class="cloud-badge syncing">
+                  <span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  Syncing
+                </span>
+                <button type="button" class="toggle" data-cloud="gcp" role="switch" aria-checked="false" aria-label="GCP account linkage"></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Simulated API Key Rotations -->
+        <section class="glass-card rounded-2xl p-6">
+          <div>
+            <p class="text-[10px] uppercase tracking-[0.3em] text-violet-400 font-bold">Credential Lifecycle</p>
+            <h2 class="text-lg font-bold text-white mt-2 tracking-tight">Simulated API Key Rotations</h2>
+            <p class="text-sm text-slate-400 mt-2">Automated rotation schedules for telemetry ingest and cloud provider API credentials.</p>
+          </div>
+          <div class="mt-4">
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Auto-Rotate Telemetry Ingest Keys</p>
+                <p class="text-xs text-slate-500 mt-1">Rotates agent bearer tokens every 30 days. Last rotation: <span id="telemetry-rotated-at" class="text-slate-400">2026-05-12</span></p>
+                <p class="key-pill mt-2 inline-block">ok_live_••••••••••••8f3a</p>
+              </div>
+              <button type="button" class="toggle on" id="toggle-telemetry-rotation" role="switch" aria-checked="true" aria-label="Telemetry key rotation"></button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Auto-Rotate Cloud Provider API Keys</p>
+                <p class="text-xs text-slate-500 mt-1">Simulated cross-account IAM key rotation across linked AWS, Azure, and GCP accounts.</p>
+                <p class="key-pill mt-2 inline-block">cloud_api_••••••••••••c91e</p>
+              </div>
+              <button type="button" class="toggle" id="toggle-cloud-api-rotation" role="switch" aria-checked="false" aria-label="Cloud API key rotation"></button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <p class="font-semibold text-white text-sm">Compliance Vault Signing Key Rotation</p>
+                <p class="text-xs text-slate-500 mt-1">Re-seeds SHA-256 hash chain anchors for immutable audit ledger entries.</p>
+                <p class="key-pill mt-2 inline-block">vault_sig_••••••••••••2b7d</p>
+              </div>
+              <button type="button" class="toggle on" id="toggle-vault-rotation" role="switch" aria-checked="true" aria-label="Vault signing key rotation"></button>
+            </div>
+            <div class="pt-4 mt-2 border-t border-slate-800">
+              <button type="button" id="simulate-rotation-btn" class="rounded-xl border border-violet-500/35 bg-violet-500/10 px-4 py-2.5 text-sm font-semibold text-violet-200 hover:bg-violet-500/20 transition">
+                Simulate Rotation Now
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SESSION_TOKEN_KEY = "omnikube_session_token";
+    const AUTH_LOGIN_URL = "/api/v1/auth/login";
+    const AUTH_LOGOUT_URL = "/api/v1/auth/logout";
+    const AUTH_ME_URL = "/api/v1/auth/me";
+    const ROLE_ADMIN = "Admin";
+    const SETTINGS_STORAGE_KEY = "omnikube_admin_settings_v1";
+
+    const jsonHeaders = { "Content-Type": "application/json" };
+    const fetchOptions = { credentials: "include" };
+
+    let currentUser = null;
+    let authRedirectSuspended = false;
+
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY);
+    }
+
+    function setSessionToken(token) {
+      if (token) sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    }
+
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
+    function buildAuthHeaders(extraHeaders = {}) {
+      const headers = { ...jsonHeaders, ...extraHeaders };
+      const token = getSessionToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return headers;
+    }
+
+    function applySessionBootstrap() {
+      const bootstrap = window.__OMNIKUBE_SESSION__;
+      if (!bootstrap) return;
+      currentUser = {
+        ...(currentUser || {}),
+        username: bootstrap.username,
+        role: bootstrap.role,
+        tenant_id: bootstrap.tenant_id,
+        organization_id: bootstrap.organization_id,
+      };
+    }
+
+    function showToast(message, type = "success") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast-enter glass rounded-xl border px-4 py-3 text-sm shadow-xl ${type === "success" ? "toast-success" : "toast-error"}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        ...options,
+        headers: buildAuthHeaders(options.headers || {})
+      });
+      let payload = null;
+      try { payload = await response.json(); } catch (_) { payload = null; }
+      if (response.status === 401) {
+        if (!authRedirectSuspended) showLogin();
+        throw new Error(payload?.error || "Session expired.");
+      }
+      if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status})`);
+      return payload;
+    }
+
+    function showLogin() {
+      currentUser = null;
+      document.getElementById("login-overlay").classList.remove("hidden");
+      document.getElementById("app-shell").classList.add("hidden");
+    }
+
+    function showAppShell() {
+      document.getElementById("login-overlay").classList.add("hidden");
+      document.getElementById("app-shell").classList.remove("hidden");
+      document.getElementById("user-display").textContent = currentUser.username;
+      document.getElementById("role-badge").textContent = currentUser.role;
+      if (currentUser.role !== ROLE_ADMIN) {
+        showToast("Admin role recommended for structural configuration changes.", "error");
+      }
+    }
+
+    async function checkSession() {
+      applySessionBootstrap();
+      try {
+        const payload = await apiFetch(AUTH_ME_URL);
+        currentUser = payload.user;
+        return true;
+      } catch (_) {
+        return Boolean(window.__OMNIKUBE_SESSION__?.organization_id);
+      }
+    }
+
+    function readToggle(id) {
+      const el = document.getElementById(id);
+      return el ? el.classList.contains("on") : false;
+    }
+
+    function setToggle(el, on) {
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-checked", on ? "true" : "false");
+    }
+
+    function bindToggle(el) {
+      el.addEventListener("click", () => {
+        const next = !el.classList.contains("on");
+        setToggle(el, next);
+        if (el.dataset.cloud === "gcp") updateGcpBadge(next);
+      });
+    }
+
+    function updateGcpBadge(connected) {
+      const badge = document.getElementById("gcp-status-badge");
+      if (!badge) return;
+      if (connected) {
+        badge.className = "cloud-badge connected";
+        badge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Connected';
+      } else {
+        badge.className = "cloud-badge syncing";
+        badge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse"></span> Syncing';
+      }
+    }
+
+    function collectSettings() {
+      return {
+        budgetOverrideEnabled: readToggle("toggle-budget-override"),
+        hardCapEnabled: readToggle("toggle-hard-cap"),
+        ceilingAlertEnabled: readToggle("toggle-ceiling-alert"),
+        cloudAccounts: {
+          aws: document.querySelector('[data-cloud="aws"]')?.classList.contains("on") ?? false,
+          azure: document.querySelector('[data-cloud="azure"]')?.classList.contains("on") ?? false,
+          gcp: document.querySelector('[data-cloud="gcp"]')?.classList.contains("on") ?? false,
+        },
+        telemetryRotation: readToggle("toggle-telemetry-rotation"),
+        cloudApiRotation: readToggle("toggle-cloud-api-rotation"),
+        vaultRotation: readToggle("toggle-vault-rotation"),
+        telemetryRotatedAt: document.getElementById("telemetry-rotated-at")?.textContent || "",
+      };
+    }
+
+    function applySettings(settings) {
+      if (!settings) return;
+      setToggle(document.getElementById("toggle-budget-override"), settings.budgetOverrideEnabled ?? true);
+      setToggle(document.getElementById("toggle-hard-cap"), settings.hardCapEnabled ?? true);
+      setToggle(document.getElementById("toggle-ceiling-alert"), settings.ceilingAlertEnabled ?? false);
+      setToggle(document.querySelector('[data-cloud="aws"]'), settings.cloudAccounts?.aws ?? true);
+      setToggle(document.querySelector('[data-cloud="azure"]'), settings.cloudAccounts?.azure ?? true);
+      setToggle(document.querySelector('[data-cloud="gcp"]'), settings.cloudAccounts?.gcp ?? false);
+      updateGcpBadge(settings.cloudAccounts?.gcp ?? false);
+      setToggle(document.getElementById("toggle-telemetry-rotation"), settings.telemetryRotation ?? true);
+      setToggle(document.getElementById("toggle-cloud-api-rotation"), settings.cloudApiRotation ?? false);
+      setToggle(document.getElementById("toggle-vault-rotation"), settings.vaultRotation ?? true);
+      if (settings.telemetryRotatedAt) {
+        document.getElementById("telemetry-rotated-at").textContent = settings.telemetryRotatedAt;
+      }
+    }
+
+    function loadStoredSettings() {
+      try {
+        const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (raw) applySettings(JSON.parse(raw));
+      } catch (_) { /* ignore */ }
+    }
+
+    function saveSettings() {
+      const settings = collectSettings();
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+      showToast("Admin settings saved locally.", "success");
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+      authRedirectSuspended = true;
+      try {
+        const payload = await fetch(AUTH_LOGIN_URL, {
+          method: "POST",
+          credentials: "include",
+          headers: jsonHeaders,
+          body: JSON.stringify({ username, password })
+        }).then(r => r.json());
+        if (payload.error) throw new Error(payload.error);
+        if (payload.token) setSessionToken(payload.token);
+        currentUser = payload.user;
+        showAppShell();
+      } catch (error) {
+        errorEl.textContent = error.message || "Login failed.";
+      } finally {
+        authRedirectSuspended = false;
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch(AUTH_LOGOUT_URL, { method: "POST", credentials: "include", headers: buildAuthHeaders() });
+      } catch (_) { /* ignore */ }
+      clearSessionToken();
+      showLogin();
+    }
+
+    document.querySelectorAll(".toggle").forEach(bindToggle);
+
+    document.getElementById("save-settings-btn").addEventListener("click", saveSettings);
+
+    document.getElementById("simulate-rotation-btn").addEventListener("click", () => {
+      const today = new Date().toISOString().slice(0, 10);
+      document.getElementById("telemetry-rotated-at").textContent = today;
+      showToast("Simulated API key rotation completed.", "success");
+    });
+
+    document.getElementById("login-form").addEventListener("submit", handleLogin);
+    document.getElementById("logout-button").addEventListener("click", handleLogout);
+
+    (async function init() {
+      loadStoredSettings();
+      const hasSession = await checkSession();
+      if (hasSession && currentUser) {
+        showAppShell();
+      } else if (window.__OMNIKUBE_SESSION__?.username) {
+        currentUser = window.__OMNIKUBE_SESSION__;
+        showAppShell();
+      } else {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,3 +1,5 @@
+# Legacy single-pod load generator (superseded by cpu-stress-daemonset.yaml for cluster-wide stress).
+# Kept for quick single-node tests.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -8,6 +10,17 @@ spec:
   containers:
     - name: load-generator
       image: alpine:latest
+      resources:
+        requests:
+          cpu: 500m
+        limits:
+          cpu: 1000m
       command: ["/bin/sh", "-c"]
       args:
-        - while true; do echo 'stresstest' | md5sum; done
+        - |
+          echo "[Load Generator] Starting CPU burn"
+          while true; do
+            echo 'stresstest' | md5sum >/dev/null &
+            echo 'stresstest' | md5sum >/dev/null &
+            wait
+          done

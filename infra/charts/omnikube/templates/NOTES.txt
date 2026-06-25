@@ -1,0 +1,41 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Chart:     {{ .Chart.Name }}-{{ .Chart.Version }}
+App:       {{ .Chart.AppVersion }}
+
+{{- if .Values.server.enabled }}
+
+Management server
+-----------------
+  Service: {{ include "omnikube.fullname" . }}-server:{{ .Values.server.service.port }}
+  Thresholds (seed): CPU {{ .Values.server.thresholds.cpu }}% / Memory {{ .Values.server.thresholds.memory }}%
+
+  Port-forward the dashboard:
+    kubectl port-forward svc/{{ include "omnikube.fullname" . }}-server {{ .Values.server.service.targetPort }}:{{ .Values.server.service.port }} -n {{ .Release.Namespace }}
+
+{{- end }}
+
+{{- if .Values.agent.enabled }}
+
+Metrics agents
+--------------
+  DaemonSet: {{ include "omnikube.fullname" . }}-agent
+  Metrics port: {{ .Values.agent.service.port }}
+{{- end }}
+
+{{- if .Values.mockHighCpu.enabled }}
+
+Stress / mock workloads
+-----------------------
+  Mock high-CPU agents: enabled ({{ .Values.mockHighCpu.replicaCount }} replicas)
+{{- end }}
+
+{{- if .Values.stress.cpuStressDaemonSet.enabled }}
+  CPU stress DaemonSet: enabled
+{{- end }}
+
+Upgrade example:
+  helm upgrade {{ .Release.Name }} ./infra/charts/omnikube -n {{ .Release.Namespace }} \
+    --set server.thresholds.cpu=85 --set mockHighCpu.enabled=true

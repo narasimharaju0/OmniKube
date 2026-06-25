@@ -1,0 +1,4 @@
+{{- /*
+  Legacy persistence manifest replaced by templates/pvc.yaml (omnikube-db-pvc).
+  Kept as a no-op so existing helm releases referencing this file do not break.
+*/ -}}

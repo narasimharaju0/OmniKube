@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniKube | Cost Optimization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          colors: {
+            midnight: "#0b0f19",
+            panel: "#111827",
+            accent: "var(--brand-primary, #6366f1)"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --brand-primary: #6366f1;
+      --brand-secondary: #4f46e5;
+      --brand-glow: rgba(99, 102, 241, 0.35);
+      --savings-neon: #34d399;
+      --savings-glow: rgba(52, 211, 153, 0.55);
+    }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 120% 80% at 10% -10%, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 0%, rgba(52, 211, 153, 0.08), transparent 45%),
+        linear-gradient(180deg, #0b0f19 0%, #020617 100%);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    .sidebar-glass {
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgb(30 41 59);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover { color: #e2e8f0; background: rgba(255, 255, 255, 0.04); }
+    .nav-link.active {
+      color: #fff;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent);
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn {
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn:hover { filter: brightness(1.08); }
+    .login-backdrop {
+      background: radial-gradient(ellipse 100% 80% at 50% -20%, color-mix(in srgb, var(--brand-primary) 30%, rgba(30,27,75,0.95)), rgba(2,6,23,0.98) 55%, #020617);
+    }
+    .hero-savings-card {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.92));
+      border: 1px solid rgba(52, 211, 153, 0.22);
+      box-shadow:
+        0 0 0 1px rgba(52, 211, 153, 0.06) inset,
+        0 0 64px rgba(52, 211, 153, 0.12),
+        0 24px 48px rgba(0, 0, 0, 0.45);
+    }
+    .hero-savings-card::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      right: -10%;
+      width: 420px;
+      height: 420px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(52, 211, 153, 0.14), transparent 68%);
+      pointer-events: none;
+    }
+    .neon-savings {
+      color: var(--savings-neon);
+      text-shadow:
+        0 0 20px var(--savings-glow),
+        0 0 40px rgba(52, 211, 153, 0.35),
+        0 0 80px rgba(52, 211, 153, 0.15);
+    }
+    .rec-card {
+      border: 1px solid rgb(30 41 59);
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .rec-card:hover {
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 0 32px rgba(99, 102, 241, 0.08);
+    }
+    .rec-card.action-required {
+      border-color: rgba(251, 191, 36, 0.35);
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.06), rgba(15, 23, 42, 0.55));
+    }
+    .rec-card.guardrail-blocked {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(15, 23, 42, 0.55));
+      box-shadow: 0 0 40px rgba(251, 146, 60, 0.12);
+    }
+    .rec-card.cross-cloud {
+      border-color: rgba(52, 211, 153, 0.35);
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.06), rgba(15, 23, 42, 0.55));
+    }
+    .badge-guardrail {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fde68a;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.45);
+      box-shadow: 0 0 20px rgba(251, 146, 60, 0.2);
+    }
+    .badge-savings {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      background: rgba(52, 211, 153, 0.14);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      box-shadow: 0 0 24px rgba(52, 211, 153, 0.35), 0 0 48px rgba(52, 211, 153, 0.12);
+    }
+    .override-btn {
+      background: linear-gradient(135deg, #fb923c, #ea580c);
+      box-shadow: 0 0 24px rgba(249, 115, 22, 0.45), 0 4px 16px rgba(234, 88, 12, 0.35);
+      transition: filter 0.2s ease, transform 0.15s ease;
+    }
+    .override-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .migrate-btn {
+      background: linear-gradient(135deg, #34d399, #059669);
+      box-shadow: 0 0 22px rgba(52, 211, 153, 0.4);
+    }
+    .cloud-hop {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+    .cloud-pill {
+      padding: 0.5rem 0.85rem;
+      border-radius: 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(2, 6, 23, 0.55);
+    }
+    .cloud-pill.source { color: #93c5fd; border-color: rgba(59, 130, 246, 0.35); }
+    .cloud-pill.target { color: #6ee7b7; border-color: rgba(52, 211, 153, 0.35); }
+    .cloud-arrow {
+      color: #64748b;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .metric-mini {
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-mini-icon {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      opacity: 0.35;
+    }
+    .fix-now-btn {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.35);
+      transition: filter 0.2s ease, transform 0.15s ease;
+    }
+    .fix-now-btn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+    .fix-now-btn:disabled,
+    .fix-now-btn.is-loading {
+      opacity: 0.72;
+      cursor: wait;
+      transform: none;
+    }
+    .fix-now-btn.is-loading .fix-now-label { opacity: 0; }
+    .fix-now-btn.is-loading .fix-now-spinner { opacity: 1; }
+    .fix-now-spinner {
+      opacity: 0;
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .fix-now-btn { position: relative; min-width: 6.5rem; }
+    .spinner-ring {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 9999px;
+      border: 2px solid rgba(15, 23, 42, 0.25);
+      border-top-color: #0f172a;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hero-savings-card.remediation-active {
+      animation: hero-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes hero-pulse {
+      0%, 100% { box-shadow: 0 0 64px rgba(52, 211, 153, 0.12), 0 24px 48px rgba(0, 0, 0, 0.45); }
+      50% { box-shadow: 0 0 88px rgba(52, 211, 153, 0.28), 0 24px 48px rgba(0, 0, 0, 0.45); }
+    }
+    .toast-loading { border-color: rgba(99, 102, 241, 0.35); background: rgba(30, 27, 75, 0.92); color: #e0e7ff; }
+    .toast-success { border-color: rgba(52, 211, 153, 0.35); background: rgba(6, 78, 59, 0.88); color: #d1fae5; }
+    .toast-error { border-color: rgba(248, 113, 113, 0.35); background: rgba(69, 10, 10, 0.88); color: #fecaca; }
+    .toast-exit { opacity: 0; transform: translateY(-8px); transition: opacity 0.25s ease, transform 0.25s ease; }
+    .util-badge {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.28);
+      color: #6ee7b7;
+    }
+    .toast-enter { animation: toast-in 0.25s ease forwards; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased">
+  <div id="toast-container" class="fixed top-5 right-5 z-[70] flex flex-col gap-3 max-w-sm"></div>
+
+  <div id="login-overlay" class="fixed inset-0 z-[60] login-backdrop flex items-center justify-center px-4">
+    <div class="glass w-full max-w-md rounded-2xl p-8 shadow-2xl border border-white/10">
+      <div class="text-center mb-8">
+        <div id="brand-logo" class="mx-auto mb-4 h-12 w-12 rounded-xl brand-btn flex items-center justify-center text-lg font-bold">OK</div>
+        <p class="text-xs uppercase tracking-[0.35em] text-indigo-300/80">OmniKube CloudMetrics</p>
+        <h1 class="text-2xl font-semibold mt-3 text-white">Sign in to continue</h1>
+        <p class="text-sm text-slate-400 mt-2">Cost optimization requires an authenticated session</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-username" class="block text-sm text-slate-300 mb-1.5">Username</label>
+          <input id="login-username" type="text" autocomplete="username" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="admin_user" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm text-slate-300 mb-1.5">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="changeme" />
+        </div>
+        <p id="login-error" class="text-sm text-red-300 min-h-[1.25rem]"></p>
+        <button type="submit" class="brand-btn w-full rounded-xl py-2.5 text-sm font-medium text-white transition">Sign In</button>
+        <a href="/auth/login?return_to=/cost-optimization" class="mt-3 block w-full rounded-xl py-2.5 text-sm font-medium text-center text-indigo-100 border border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/20 transition">
+          Sign in with Enterprise SSO
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <div id="app-shell" class="hidden min-h-screen">
+    <aside class="sidebar-glass fixed inset-y-0 left-0 z-50 w-64 flex flex-col p-5">
+      <div class="mb-8">
+        <div class="flex items-center gap-3">
+          <div id="sidebar-brand-logo" class="h-10 w-10 rounded-lg brand-btn flex items-center justify-center text-sm font-bold shrink-0">OK</div>
+          <div class="min-w-0">
+            <p id="brand-label" class="text-[10px] uppercase tracking-[0.3em] text-slate-400 truncate">OmniKube</p>
+            <p id="brand-title" class="text-sm font-semibold text-white truncate">CloudMetrics</p>
+            <p class="text-[11px] text-slate-500 truncate">Enterprise Telemetry</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-1">
+        <a href="/dashboard" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Dashboard
+        </a>
+        <a href="/cost-optimization" class="nav-link active">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          Cost Optimization
+        </a>
+        <a href="/admin/settings" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Admin Settings
+        </a>
+      </nav>
+      <div class="mt-auto pt-4 border-t border-white/5 text-xs text-slate-500">
+        <p>OmniKube v2.0 · Right-Sizing Engine</p>
+      </div>
+    </aside>
+
+    <main class="ml-64 flex-1 min-w-0 min-h-screen overflow-y-auto">
+      <header class="sticky top-0 z-40 glass-card border-b border-slate-800 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500 font-semibold">FinOps Intelligence</p>
+          <h1 class="text-2xl md:text-3xl font-bold mt-1 tracking-tight bg-gradient-to-r from-white via-emerald-100 to-slate-400 bg-clip-text text-transparent">
+            Cost Optimization Command Center
+          </h1>
+          <p class="text-slate-400 mt-1 text-sm">Automated right-sizing recommendations from 24-hour cluster telemetry.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
+            <span id="user-display" class="font-medium text-white">—</span>
+            <span class="text-slate-500 mx-1">·</span>
+            <span id="role-badge" class="text-indigo-300">—</span>
+          </div>
+          <select id="provider-select" class="rounded-xl bg-slate-900/60 border border-white/10 px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="aws">AWS</option>
+            <option value="gcp">GCP</option>
+            <option value="azure">Azure</option>
+          </select>
+          <button id="refresh-btn" class="brand-btn rounded-xl px-4 py-2 text-sm font-medium text-white">Refresh</button>
+          <button id="logout-button" class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-300 hover:text-white hover:border-red-400/30 transition">Sign Out</button>
+        </div>
+      </header>
+
+      <div class="p-6 space-y-8 max-w-[1200px]">
+        <section class="hero-savings-card rounded-2xl p-8 md:p-10 relative" id="hero-savings-card">
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div>
+              <p class="text-xs uppercase tracking-[0.35em] text-emerald-300/80">Estimated Monthly Savings</p>
+              <p id="hero-savings-amount" class="neon-savings text-5xl md:text-6xl font-bold mt-4 tracking-tight">$0.00</p>
+              <p id="hero-savings-meta" class="text-sm text-slate-400 mt-3 max-w-xl">Analyzing cluster snapshots…</p>
+              <div id="hero-util-badge" class="hidden mt-4 inline-flex items-center gap-2 util-badge rounded-full px-3 py-1 text-xs font-medium"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm min-w-[240px]">
+              <div class="metric-mini glass-card rounded-xl p-4 relative">
+                <svg class="metric-mini-icon h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" stroke-width="1.5"/><path stroke-width="1.5" d="M9 9h6v6H9z"/></svg>
+                <p class="text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Avg CPU</p>
+                <p id="stat-avg-cpu" class="text-xl font-bold text-white mt-1">—</p>
+              </div>
+              <div class="metric-mini glass-card rounded-xl p-4 relative">
+                <svg class="metric-mini-icon h-8 w-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" d="M4 8h16v8H4z"/></svg>
+                <p class="text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Avg Memory</p>
+                <p id="stat-avg-memory" class="text-xl font-bold text-white mt-1">—</p>
+              </div>
+              <div class="metric-mini glass-card rounded-xl p-4 relative">
+                <svg class="metric-mini-icon h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" stroke-linecap="round" d="M4 6h16M4 12h8"/></svg>
+                <p class="text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Nodes</p>
+                <p id="stat-avg-nodes" class="text-xl font-bold text-emerald-200 mt-1">—</p>
+              </div>
+              <div class="metric-mini glass-card rounded-xl p-4 relative">
+                <svg class="metric-mini-icon h-8 w-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="1.5" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/></svg>
+                <p class="text-slate-500 text-[10px] uppercase tracking-wider font-semibold">Pods</p>
+                <p id="stat-avg-pods" class="text-xl font-bold text-violet-200 mt-1">—</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <div class="flex items-end justify-between gap-4 flex-wrap">
+            <div>
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Recommendations Feed</p>
+              <h2 class="text-xl font-semibold text-white mt-1">Right-Sizing Actions</h2>
+            </div>
+            <p id="feed-status" class="text-xs text-slate-500">Loading…</p>
+          </div>
+          <div id="recommendations-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <p class="text-slate-500 text-sm col-span-full">Loading optimization recommendations…</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SESSION_TOKEN_KEY = "omnikube_session_token";
+    const AUTH_LOGIN_URL = "/api/v1/auth/login";
+    const AUTH_LOGOUT_URL = "/api/v1/auth/logout";
+    const AUTH_ME_URL = "/api/v1/auth/me";
+    const AUTH_SSO_URL = "/auth/login?return_to=/cost-optimization";
+    const RECOMMENDATIONS_URL = "/api/v1/optimization/recommendations";
+    const APPLY_URL = "/api/v1/optimization/apply";
+    const OVERRIDE_URL = "/api/v1/optimization/override";
+    const MIGRATE_URL = "/api/v1/optimization/migrate";
+    const ROLE_ADMIN = "Admin";
+
+    const jsonHeaders = { "Content-Type": "application/json" };
+    const fetchOptions = { credentials: "include" };
+
+    let currentUser = null;
+    let latestReport = null;
+    let authRedirectSuspended = false;
+    let remediationInFlight = false;
+    let activeLoadingToast = null;
+
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY);
+    }
+
+    function setSessionToken(token) {
+      if (token) sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    }
+
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
+    function buildAuthHeaders(extraHeaders = {}) {
+      const headers = { ...jsonHeaders, ...extraHeaders };
+      const token = getSessionToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return headers;
+    }
+
+    function applySessionBootstrap() {
+      const bootstrap = window.__OMNIKUBE_SESSION__;
+      if (!bootstrap) return;
+      currentUser = {
+        ...(currentUser || {}),
+        username: bootstrap.username,
+        role: bootstrap.role,
+        tenant_id: bootstrap.tenant_id,
+        organization_id: bootstrap.organization_id,
+        email: bootstrap.email,
+        display_name: bootstrap.display_name,
+        auth_provider: bootstrap.auth_provider,
+      };
+    }
+
+    function getOrganizationScope() {
+      return currentUser?.organization_id
+        || window.__OMNIKUBE_SESSION__?.organization_id
+        || "default";
+    }
+
+    function withOrgScope(url) {
+      const orgId = getOrganizationScope();
+      if (!orgId || url.includes("organization_id=")) return url;
+      const joiner = url.includes("?") ? "&" : "?";
+      return `${url}${joiner}organization_id=${encodeURIComponent(orgId)}`;
+    }
+
+    function dismissToast(toastEl) {
+      if (!toastEl) return;
+      toastEl.classList.add("toast-exit");
+      setTimeout(() => toastEl.remove(), 260);
+    }
+
+    function showToast(message, type = "error", options = {}) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const palette = {
+        error: "toast-error",
+        success: "toast-success",
+        loading: "toast-loading"
+      }[type] || "toast-error";
+
+      toast.className = `toast-enter glass rounded-xl border px-4 py-3 text-sm shadow-xl ${palette}`;
+      if (options.persist) toast.dataset.persist = "true";
+
+      if (type === "loading") {
+        toast.innerHTML = `
+          <div class="flex items-start gap-3">
+            <span class="spinner-ring shrink-0 mt-0.5"></span>
+            <div>
+              <p class="font-medium text-white">${escapeHtml(message)}</p>
+              ${options.detail ? `<p class="text-xs text-indigo-200/80 mt-1">${escapeHtml(options.detail)}</p>` : ""}
+            </div>
+          </div>
+        `;
+      } else {
+        toast.innerHTML = `
+          <p class="font-medium">${escapeHtml(message)}</p>
+          ${options.detail ? `<p class="text-xs opacity-80 mt-1">${escapeHtml(options.detail)}</p>` : ""}
+        `;
+      }
+
+      container.appendChild(toast);
+
+      if (!options.persist) {
+        setTimeout(() => dismissToast(toast), options.duration ?? 5000);
+      }
+
+      return toast;
+    }
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(withOrgScope(url), {
+        ...fetchOptions,
+        ...options,
+        headers: buildAuthHeaders(options.headers || {})
+      });
+      let payload = null;
+      try { payload = await response.json(); } catch (_) { payload = null; }
+      if (response.status === 401) {
+        if (!authRedirectSuspended) showLogin();
+        throw new Error(payload?.error || "Session expired. Please sign in again.");
+      }
+      if (!response.ok) {
+        throw new Error(payload?.error || `Request failed (${response.status})`);
+      }
+      return payload;
+    }
+
+    function formatUsd(value) {
+      const amount = Number(value || 0);
+      return `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function showLogin() {
+      currentUser = null;
+      document.getElementById("login-overlay").classList.remove("hidden");
+      document.getElementById("app-shell").classList.add("hidden");
+    }
+
+    function showAppShell() {
+      document.getElementById("login-overlay").classList.add("hidden");
+      document.getElementById("app-shell").classList.remove("hidden");
+      document.getElementById("user-display").textContent = currentUser.username;
+      document.getElementById("role-badge").textContent = currentUser.role;
+    }
+
+    async function checkSession() {
+      applySessionBootstrap();
+      try {
+        const payload = await apiFetch(AUTH_ME_URL);
+        currentUser = payload.user;
+        return true;
+      } catch (_) {
+        return Boolean(window.__OMNIKUBE_SESSION__?.organization_id);
+      }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+      try {
+        const response = await fetch(AUTH_LOGIN_URL, {
+          method: "POST",
+          credentials: "include",
+          headers: jsonHeaders,
+          body: JSON.stringify({ username, password })
+        });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || "Login failed");
+        if (body.token) setSessionToken(body.token);
+        currentUser = body.user;
+        showAppShell();
+        await loadRecommendations();
+      } catch (error) {
+        errorEl.textContent = error.message || "Login failed";
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch(AUTH_LOGOUT_URL, { method: "POST", credentials: "include", headers: buildAuthHeaders() });
+      } catch (_) { /* ignore */ }
+      clearSessionToken();
+      showLogin();
+    }
+
+    function resolveRemediationAction(recommendation) {
+      if (recommendation?.type === "predictive_scale_up") return "upscale_nodes";
+      if (recommendation?.type === "replica_rightsizing") return "reduce_replicas";
+      if (recommendation?.type === "node_rightsizing") return "downscale_nodes";
+      if (recommendation?.action === "reduce_replica_count") return "reduce_replicas";
+      if (recommendation?.action === "upscale_nodes") return "upscale_nodes";
+      return "downscale_nodes";
+    }
+
+    function buildApplyPayload(recommendation) {
+      const action = resolveRemediationAction(recommendation);
+      const body = { action };
+      if (action === "downscale_nodes" || action === "upscale_nodes") {
+        body.target = (
+          recommendation?.recommended_node_spec
+          || recommendation?.current_node_spec
+          || "medium"
+        );
+      }
+      if (recommendation?.recommended_replica_count != null) {
+        body.target_replicas = recommendation.recommended_replica_count;
+      }
+      if (recommendation?.namespace) body.namespace = recommendation.namespace;
+      if (recommendation?.deployment) body.deployment = recommendation.deployment;
+      if (latestReport?.provider) body.provider = latestReport.provider;
+      return body;
+    }
+
+    function actionLabel(action) {
+      if (action === "upscale_nodes") return "Scaling cluster nodes up";
+      if (action === "reduce_replicas") return "Reducing pod replicas";
+      return "Downscaling cluster nodes";
+    }
+
+    function setRemediationUiState(loading, activeButton = null) {
+      remediationInFlight = loading;
+      document.getElementById("hero-savings-card")?.classList.toggle("remediation-active", loading);
+
+      document.querySelectorAll("[data-fix-now], [data-admin-override], [data-migrate-now]").forEach((button) => {
+        const isActive = activeButton && button === activeButton;
+        button.disabled = loading;
+        button.classList.toggle("is-loading", loading && isActive);
+        if (!loading) button.classList.remove("is-loading");
+      });
+    }
+
+    function fixNowButtonMarkup(label = "Fix Now") {
+      return `
+        <span class="fix-now-label">${label}</span>
+        <span class="fix-now-spinner" aria-hidden="true">
+          <span class="spinner-ring"></span>
+          <span>Applying…</span>
+        </span>
+      `;
+    }
+
+    async function handleFixNow(triggerButton, recommendation) {
+      if (remediationInFlight) return;
+
+      const payload = buildApplyPayload(recommendation);
+      const actionText = actionLabel(payload.action);
+
+      setRemediationUiState(true, triggerButton);
+      activeLoadingToast = showToast(
+        "Dispatching cluster remediation…",
+        "loading",
+        { persist: true, detail: `${actionText} via ChatOps` }
+      );
+
+      try {
+        const result = await apiFetch(APPLY_URL, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+
+        const executionDetail = result.execution?.detail
+          || `${actionText} completed (${result.execution?.mode || "executed"})`;
+
+        showToast(
+          result.message || "Cluster automation triggered successfully. Remediating infrastructure scale.",
+          "success",
+          {
+            detail: executionDetail,
+            duration: 6500
+          }
+        );
+
+        await loadRecommendations();
+      } catch (error) {
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+        showToast(
+          error.message || "Remediation failed.",
+          "error",
+          { detail: "Your instruction was not applied. Check role permissions and try again." }
+        );
+      } finally {
+        setRemediationUiState(false);
+      }
+    }
+
+    function renderRecommendationCard(rec, options = {}) {
+      const recIndex = options.recIndex ?? 0;
+
+      if (rec.type === "cross_cloud_arbitrage" || rec.action === "cross_cloud_migration") {
+        const source = escapeHtml(rec.source_platform || rec.source_provider || "Source");
+        const target = escapeHtml(rec.target_platform || rec.target_provider || "Target");
+        const savings = formatUsd(rec.arbitrage_monthly_savings_usd || 0);
+        const path = escapeHtml(rec.migration_path || `${rec.workload} migration`);
+        return `
+          <article class="rec-card cross-cloud rounded-2xl p-5 flex flex-col gap-4 lg:col-span-2">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400/90 font-bold">Cross-Cloud Migration</p>
+                <h3 class="text-lg font-bold text-white mt-2 tracking-tight">${escapeHtml(rec.workload || "Workload")}</h3>
+                <p class="text-sm text-slate-400 mt-2">${path}</p>
+                <div class="cloud-hop">
+                  <span class="cloud-pill source">${source}</span>
+                  <span class="cloud-arrow" aria-hidden="true">→</span>
+                  <span class="cloud-pill target">${target}</span>
+                </div>
+              </div>
+              <span class="badge-savings shrink-0">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                ${savings}<span class="text-emerald-300/70 font-medium text-xs">/mo saved</span>
+              </span>
+            </div>
+            <p class="text-sm text-slate-400">${escapeHtml(rec.rationale || "")}</p>
+            <button type="button" class="migrate-btn self-start rounded-xl px-5 py-2.5 text-sm font-bold text-slate-950 relative min-w-[9rem]" data-migrate-now data-rec-index="${recIndex}">
+              ${fixNowButtonMarkup("Migrate Now")}
+            </button>
+          </article>
+        `;
+      }
+
+      if (rec.type === "predictive_scale_up" && rec.status === "Blocked by Guardrail") {
+        const savingsBlocked = formatUsd(rec.projected_monthly_cost_usd || 0);
+        return `
+          <article class="rec-card guardrail-blocked rounded-2xl p-5 flex flex-col gap-4 lg:col-span-2">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <span class="badge-guardrail">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  </svg>
+                  Blocked by Guardrail
+                </span>
+                <h3 class="text-lg font-bold text-white mt-3 tracking-tight">Predictive Scale-Up</h3>
+                <p class="text-sm text-amber-100/80 mt-2">${escapeHtml(rec.guardrail_message || rec.rationale || "Budget ceiling exceeded.")}</p>
+              </div>
+              <span class="text-sm font-semibold text-amber-200/90 shrink-0">${savingsBlocked}<span class="text-slate-500 font-normal"> projected</span></span>
+            </div>
+            ${currentUser?.role === ROLE_ADMIN && rec.override_token ? `
+              <button type="button" class="override-btn self-start rounded-xl px-5 py-2.5 text-sm font-bold text-white relative min-w-[10rem]" data-admin-override data-rec-index="${recIndex}">
+                ${fixNowButtonMarkup("Admin Override")}
+              </button>
+            ` : `
+              <p class="text-xs text-amber-200/70">Administrator approval required to force this scale-up.</p>
+            `}
+          </article>
+        `;
+      }
+
+      if (rec.type === "predictive_scale_up") {
+        return `
+          <article class="rec-card rounded-2xl p-5 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-[10px] uppercase tracking-wider text-indigo-300 font-bold">Predictive Scale-Up</p>
+                <h3 class="text-base font-bold text-white mt-1">${escapeHtml(rec.recommended_node_spec || "nodes")} tier</h3>
+                <p class="text-sm text-slate-400 mt-2">${escapeHtml(rec.rationale || "")}</p>
+              </div>
+              <span class="text-sm font-semibold text-indigo-200">${Number(rec.predicted_peak_utilization_pct || 0).toFixed(1)}%</span>
+            </div>
+            <button type="button" class="fix-now-btn self-start rounded-xl px-4 py-2 text-sm font-semibold text-slate-950" data-fix-now data-rec-index="${recIndex}">
+              ${fixNowButtonMarkup("Scale Up")}
+            </button>
+          </article>
+        `;
+      }
+
+      const isAction = Boolean(options.actionRequired);
+      const title = rec.type === "node_rightsizing"
+        ? `Node downscale · ${escapeHtml(rec.current_node_spec)} → ${escapeHtml(rec.recommended_node_spec)}`
+        : rec.type === "replica_rightsizing"
+          ? `Replica reduction · ${rec.current_replica_count} → ${rec.recommended_replica_count}`
+          : "Optimization recommendation";
+      const detail = rec.rationale || "Review cluster capacity against observed utilization.";
+      const savings = formatUsd(rec.monthly_savings_usd);
+
+      return `
+        <article class="rec-card ${isAction ? "action-required" : ""} rounded-2xl p-5 flex flex-col gap-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              ${isAction ? '<p class="text-xs uppercase tracking-wider text-amber-300 font-bold mb-1">Action Required</p>' : ""}
+              <h3 class="text-base font-bold text-white tracking-tight">${title}</h3>
+              <p class="text-sm text-slate-400 mt-2">${escapeHtml(detail)}</p>
+            </div>
+            <span class="shrink-0 badge-savings text-sm">${savings}<span class="text-emerald-300/60 font-medium text-xs">/mo</span></span>
+          </div>
+          <button type="button" class="${isAction ? "fix-now-btn" : "migrate-btn"} self-start rounded-xl px-4 py-2 text-sm font-semibold ${isAction ? "text-slate-950" : "text-slate-950"} relative min-w-[6.5rem]" data-fix-now data-rec-index="${recIndex}">
+            ${fixNowButtonMarkup()}
+          </button>
+        </article>
+      `;
+    }
+
+    async function handleAdminOverride(triggerButton, recommendation) {
+      if (remediationInFlight || !recommendation?.override_token) return;
+      if (currentUser?.role !== ROLE_ADMIN) {
+        showToast("Only administrators can override budget guardrails.", "error");
+        return;
+      }
+      setRemediationUiState(true, triggerButton);
+      activeLoadingToast = showToast("Applying admin budget override…", "loading", { persist: true });
+      try {
+        const result = await apiFetch(OVERRIDE_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            override_token: recommendation.override_token,
+            action: recommendation.action,
+            target: recommendation.recommended_node_spec
+          })
+        });
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+        showToast(result.message || "Guardrail override applied.", "success", { duration: 6500 });
+        await loadRecommendations();
+      } catch (error) {
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+        showToast(error.message || "Override failed.", "error");
+      } finally {
+        setRemediationUiState(false);
+      }
+    }
+
+    async function handleCrossCloudMigrate(triggerButton, recommendation) {
+      if (remediationInFlight) return;
+      setRemediationUiState(true, triggerButton);
+      activeLoadingToast = showToast("Initiating cross-cloud transfer…", "loading", {
+        persist: true,
+        detail: recommendation.migration_path || "Cloud-linking sequence"
+      });
+      try {
+        const result = await apiFetch(MIGRATE_URL, {
+          method: "POST",
+          body: JSON.stringify(recommendation)
+        });
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+        showToast(
+          result.message || "Cross-cloud migration completed.",
+          "success",
+          { detail: `${result.steps_completed || 8} transfer steps logged`, duration: 6500 }
+        );
+        await loadRecommendations();
+      } catch (error) {
+        dismissToast(activeLoadingToast);
+        activeLoadingToast = null;
+        showToast(error.message || "Migration failed.", "error");
+      } finally {
+        setRemediationUiState(false);
+      }
+    }
+
+    function updateHero(report) {
+      const savingsEl = document.getElementById("hero-savings-amount");
+      const metaEl = document.getElementById("hero-savings-meta");
+      const badgeEl = document.getElementById("hero-util-badge");
+
+      savingsEl.textContent = formatUsd(report.total_monthly_savings_usd);
+
+      const summary = report.cluster_summary;
+      if (!summary) {
+        metaEl.textContent = report.message || "No cluster snapshot data available yet.";
+        document.getElementById("stat-avg-cpu").textContent = "—";
+        document.getElementById("stat-avg-memory").textContent = "—";
+        document.getElementById("stat-avg-nodes").textContent = "—";
+        document.getElementById("stat-avg-pods").textContent = "—";
+        badgeEl.classList.add("hidden");
+        return;
+      }
+
+      const avgCpu = summary.avg_cpu_utilization_pct ?? 0;
+      const avgMem = summary.avg_memory_utilization_pct ?? 0;
+      const peakUtil = Math.max(avgCpu, avgMem);
+      const threshold = report.underutilization_threshold_pct || 30;
+
+      document.getElementById("stat-avg-cpu").textContent = `${avgCpu}%`;
+      document.getElementById("stat-avg-memory").textContent = `${avgMem}%`;
+      document.getElementById("stat-avg-nodes").textContent = String(summary.avg_node_count ?? "—");
+      document.getElementById("stat-avg-pods").textContent = String(summary.avg_pod_count ?? "—");
+
+      metaEl.textContent =
+        `${report.snapshot_count} snapshot(s) over ${report.analysis_window_hours}h · ` +
+        `${report.provider.toUpperCase()} pricing model · ` +
+        `${report.recommendations.length} recommendation(s)`;
+
+      if (report.underutilized) {
+        badgeEl.textContent = `Underutilized · ${peakUtil.toFixed(1)}% avg cluster load (threshold ${threshold}%)`;
+        badgeEl.classList.remove("hidden");
+      } else {
+        badgeEl.classList.add("hidden");
+      }
+    }
+
+    function renderRecommendations(report) {
+      const gridEl = document.getElementById("recommendations-grid");
+      const statusEl = document.getElementById("feed-status");
+      const recs = report.recommendations || [];
+
+      if (!recs.length) {
+        statusEl.textContent = report.underutilized ? "No actionable items computed" : "Cluster within utilization targets";
+        gridEl.innerHTML = `
+          <div class="rec-card rounded-2xl p-6 col-span-full">
+            <p class="text-slate-300 font-medium">${report.underutilized ? "Underutilization detected" : "No right-sizing actions needed"}</p>
+            <p class="text-sm text-slate-500 mt-2">${escapeHtml(report.message || "Continue monitoring — recommendations appear when sustained low utilization is detected.")}</p>
+          </div>
+        `;
+        return;
+      }
+
+      statusEl.textContent = `${recs.length} recommendation(s) · ${report.underutilized ? "action required" : "review suggested"}`;
+
+      const cards = [];
+      if (report.underutilized) {
+        cards.push(`
+          <article class="rec-card action-required rounded-2xl p-6 lg:col-span-2 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p class="text-xs uppercase tracking-wider text-amber-300 font-semibold">Action Required</p>
+              <h3 class="text-lg font-semibold text-white mt-1">Downscale node types or pod replicas</h3>
+              <p class="text-sm text-slate-400 mt-2">
+                Cluster averages are below the ${report.underutilization_threshold_pct}% utilization threshold.
+                Apply right-sizing to recover an estimated ${formatUsd(report.total_monthly_savings_usd)}/month.
+              </p>
+            </div>
+            <button type="button" id="hero-fix-now" data-fix-now data-rec-index="0" class="fix-now-btn shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-950">
+              ${fixNowButtonMarkup()}
+            </button>
+          </article>
+        `);
+      }
+
+      recs.forEach((rec, index) => {
+        cards.push(renderRecommendationCard(rec, {
+          actionRequired: report.underutilized && index === 0,
+          recIndex: index
+        }));
+      });
+
+      gridEl.innerHTML = cards.join("");
+
+      gridEl.querySelectorAll("[data-fix-now]").forEach((button) => {
+        const recIndex = Number(button.getAttribute("data-rec-index") || "0");
+        const recommendation = recs[recIndex] || recs[0] || {};
+        button.addEventListener("click", () => handleFixNow(button, recommendation));
+      });
+      gridEl.querySelectorAll("[data-admin-override]").forEach((button) => {
+        const recIndex = Number(button.getAttribute("data-rec-index") || "0");
+        const recommendation = recs[recIndex] || {};
+        button.addEventListener("click", () => handleAdminOverride(button, recommendation));
+      });
+      gridEl.querySelectorAll("[data-migrate-now]").forEach((button) => {
+        const recIndex = Number(button.getAttribute("data-rec-index") || "0");
+        const recommendation = recs[recIndex] || {};
+        button.addEventListener("click", () => handleCrossCloudMigrate(button, recommendation));
+      });
+    }
+
+    async function loadRecommendations() {
+      const provider = document.getElementById("provider-select").value;
+      const gridEl = document.getElementById("recommendations-grid");
+      document.getElementById("feed-status").textContent = "Loading…";
+      gridEl.innerHTML = '<p class="text-slate-500 text-sm col-span-full">Loading optimization recommendations…</p>';
+
+      try {
+        const report = await apiFetch(
+          `${RECOMMENDATIONS_URL}?provider=${encodeURIComponent(provider)}&hours=24`
+        );
+        latestReport = report;
+        updateHero(report);
+        renderRecommendations(report);
+      } catch (error) {
+        document.getElementById("hero-savings-meta").textContent = error.message || "Failed to load recommendations";
+        gridEl.innerHTML = `<p class="text-red-300 text-sm col-span-full">${escapeHtml(error.message || "Failed to load")}</p>`;
+        document.getElementById("feed-status").textContent = "Error";
+      }
+    }
+
+    document.getElementById("login-form").addEventListener("submit", handleLogin);
+    document.getElementById("logout-button").addEventListener("click", handleLogout);
+    document.getElementById("refresh-btn").addEventListener("click", loadRecommendations);
+    document.getElementById("provider-select").addEventListener("change", loadRecommendations);
+
+    (async function initApp() {
+      applySessionBootstrap();
+      authRedirectSuspended = true;
+      const hasSession = await checkSession();
+      authRedirectSuspended = false;
+      if (hasSession) {
+        showAppShell();
+        await loadRecommendations();
+      } else {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>

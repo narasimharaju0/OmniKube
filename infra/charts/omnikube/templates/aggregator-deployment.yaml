@@ -1,0 +1,27 @@
+{{- if .Values.aggregator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "omnikube.fullname" . }}-aggregator
+  labels:
+    {{- include "omnikube.aggregator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.aggregator.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "omnikube.aggregator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "omnikube.aggregator.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: omnikube-aggregator
+          image: {{ include "omnikube.aggregator.image" . }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: OMNIKUBE_CLUSTER_ID
+              value: {{ .Values.global.clusterId | quote }}
+            - name: OMNIKUBE_REGION
+              value: {{ .Values.global.region | quote }}
+{{- end }}

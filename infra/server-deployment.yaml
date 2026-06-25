@@ -17,7 +17,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: omnikube-data-pvc
+  name: omnikube-db-pvc
   labels:
     app: omnikube-server
 spec:
@@ -48,17 +48,24 @@ spec:
         - name: omnikube-server
           image: cloudmetrics-server:latest
           imagePullPolicy: IfNotPresent
+          env:
+            - name: OMNIKUBE_SLACK_WEBHOOK_URL
+              value: ""
+            - name: OMNIKUBE_DISCORD_WEBHOOK_URL
+              value: ""
+            - name: OMNIKUBE_ALERT_MOCK_WEBHOOK_URL
+              value: "http://127.0.0.1:5000/api/alerts/mock-webhook"
           ports:
             - name: http
               containerPort: 5000
               protocol: TCP
           volumeMounts:
-            - name: omnikube-data
-              mountPath: /app/data
+            - name: database-storage
+              mountPath: /data
       volumes:
-        - name: omnikube-data
+        - name: database-storage
           persistentVolumeClaim:
-            claimName: omnikube-data-pvc
+            claimName: omnikube-db-pvc
 ---
 apiVersion: v1
 kind: Service

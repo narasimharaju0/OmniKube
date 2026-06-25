@@ -1,0 +1,95 @@
+# Default values for the omnikube chart.
+
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  imagePullPolicy: IfNotPresent
+  clusterId: omnikube-cluster
+  region: local
+
+server:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: cloudmetrics-server
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 5000
+  containerPort: 5000
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 1Gi
+  rbac:
+    enabled: true
+    serviceAccountName: default
+    clusterRoleName: pod-reader-global
+  env:
+    slackWebhookUrl: ""
+    discordWebhookUrl: ""
+    alertMockWebhookUrl: "http://127.0.0.1:5000/api/alerts/mock-webhook"
+  thresholds:
+    cpu: 80.0
+    memory: 80.0
+
+aggregator:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: cloudmetrics-aggregator
+    tag: latest
+
+agent:
+  enabled: true
+  image:
+    repository: cloudmetrics-agent
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  scrapeLabel: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+mockHighCpu:
+  enabled: false
+  replicaCount: 3
+  image:
+    repository: python
+    tag: 3.11-alpine
+  metricsPort: 8080
+  mockCpuPercent: 92
+  mockMemoryPercent: 55
+
+stress:
+  cpuStressDaemonSet:
+    enabled: false
+    image:
+      repository: alpine
+      tag: latest
+    resources:
+      requests:
+        cpu: 500m
+        memory: 32Mi
+      limits:
+        cpu: 1000m
+        memory: 64Mi
+  loadGenerator:
+    enabled: false
+    image:
+      repository: alpine
+      tag: latest
+    resources:
+      requests:
+        cpu: 500m
+      limits:
+        cpu: 1000m

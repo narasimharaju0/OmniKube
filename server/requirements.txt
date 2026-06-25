@@ -1,0 +1,6 @@
+apscheduler
+kubernetes
+requests
+sqlalchemy>=2.0.0
+werkzeug>=3.0.0
+stripe>=10.0.0

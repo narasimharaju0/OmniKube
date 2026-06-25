@@ -1,0 +1,30 @@
+{{- if and .Values.server.enabled .Values.server.rbac.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.server.rbac.clusterRoleName }}
+  labels:
+    {{- include "omnikube.server.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.server.rbac.clusterRoleName }}
+  labels:
+    {{- include "omnikube.server.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.server.rbac.serviceAccountName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.server.rbac.clusterRoleName }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

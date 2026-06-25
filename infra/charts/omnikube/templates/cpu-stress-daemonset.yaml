@@ -1,0 +1,42 @@
+{{- if .Values.stress.cpuStressDaemonSet.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "omnikube.fullname" . }}-cpu-stress
+  labels:
+    {{- include "omnikube.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cpu-stress
+    app: cpu-stress
+spec:
+  selector:
+    matchLabels:
+      {{- include "omnikube.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: cpu-stress
+      app: cpu-stress
+  template:
+    metadata:
+      labels:
+        {{- include "omnikube.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: cpu-stress
+        app: cpu-stress
+    spec:
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: cpu-stress
+          image: {{ include "omnikube.stress.cpu.image" . }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          resources:
+            {{- toYaml .Values.stress.cpuStressDaemonSet.resources | nindent 12 }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "[CPU Stress] Starting multi-core burn on $(hostname)"
+              i=0
+              while true; do
+                i=$((i + 1))
+                echo "stresstest-$i" | md5sum >/dev/null &
+                echo "stresstest-$i" | md5sum >/dev/null &
+                wait
+              done
+{{- end }}

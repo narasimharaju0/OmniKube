@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniKube | CloudMetrics Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+          colors: {
+            midnight: "#0b0f19",
+            panel: "#111827",
+            accent: "var(--brand-primary, #6366f1)",
+            glow: "#22d3ee"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --brand-primary: #6366f1;
+      --brand-secondary: #4f46e5;
+      --brand-glow: rgba(99, 102, 241, 0.35);
+    }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 120% 80% at 10% -10%, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 50%),
+        radial-gradient(ellipse 80% 60% at 90% 0%, color-mix(in srgb, var(--brand-secondary) 18%, transparent), transparent 45%),
+        linear-gradient(180deg, #0b0f19 0%, #020617 100%);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgb(30 41 59);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+    .sidebar-glass {
+      background: rgba(2, 6, 23, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgb(30 41 59);
+    }
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .metric-icon-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 1.25rem;
+      filter: blur(18px);
+      opacity: 0.55;
+      z-index: 0;
+    }
+    .metric-icon-wrap svg { position: relative; z-index: 1; }
+    .metric-icon-cpu::before { background: rgba(99, 102, 241, 0.45); }
+    .metric-icon-memory::before { background: rgba(34, 211, 238, 0.4); }
+    .metric-icon-nodes::before { background: rgba(52, 211, 153, 0.38); }
+    .metric-icon-pods::before { background: rgba(167, 139, 250, 0.38); }
+    .metric-icon-cpu { background: rgba(99, 102, 241, 0.12); color: #a5b4fc; }
+    .metric-icon-memory { background: rgba(34, 211, 238, 0.12); color: #67e8f9; }
+    .metric-icon-nodes { background: rgba(52, 211, 153, 0.12); color: #6ee7b7; }
+    .metric-icon-pods { background: rgba(167, 139, 250, 0.12); color: #c4b5fd; }
+    .telemetry-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .telemetry-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 55%, transparent), transparent 60%, color-mix(in srgb, var(--brand-glow) 80%, #22d3ee));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .telemetry-glow {
+      box-shadow: 0 0 24px color-mix(in srgb, var(--brand-primary) 25%, transparent);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+      transition: all 0.2s ease;
+    }
+    .nav-link:hover { color: #e2e8f0; background: rgba(255, 255, 255, 0.04); }
+    .nav-link.active {
+      color: #fff;
+      background: linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent);
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn {
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--brand-primary) 35%, transparent);
+    }
+    .brand-btn:hover { filter: brightness(1.08); }
+    .neon-save-btn {
+      background: linear-gradient(135deg, var(--brand-primary), #22d3ee);
+      box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 40%, transparent);
+    }
+    .hero-savings-card {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 18%, rgba(15,23,42,0.9)), rgba(15,23,42,0.92));
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, rgba(255,255,255,0.08));
+      box-shadow: 0 0 48px color-mix(in srgb, var(--brand-primary) 15%, transparent);
+    }
+    .grid-stack-item-content { background: transparent; border-radius: 1.25rem; overflow: hidden; }
+    .widget-panel { height: 100%; display: flex; flex-direction: column; }
+    .widget-body { flex: 1; min-height: 0; position: relative; }
+    .grid-stack { background: transparent; }
+    .layout-status { transition: opacity 0.3s ease; }
+    .modal-backdrop { background: rgba(2, 6, 23, 0.78); backdrop-filter: blur(8px); }
+    .login-backdrop {
+      background: radial-gradient(ellipse 100% 80% at 50% -20%, color-mix(in srgb, var(--brand-primary) 30%, rgba(30,27,75,0.95)), rgba(2,6,23,0.98) 55%, #020617);
+    }
+    input[type="range"].threshold-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 0.4rem;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, var(--brand-primary), #22d3ee);
+    }
+    input[type="range"].threshold-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 9999px;
+      background: #f8fafc;
+      border: 2px solid var(--brand-primary);
+      cursor: pointer;
+      box-shadow: 0 0 12px var(--brand-glow);
+    }
+    .progress-track { height: 0.5rem; border-radius: 9999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: inherit; transition: width 0.4s ease; }
+    .workload-card { border: 1px solid rgba(255,255,255,0.06); transition: border-color 0.2s, box-shadow 0.2s; }
+    .workload-card.selected { border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); box-shadow: 0 0 20px color-mix(in srgb, var(--brand-primary) 15%, transparent); }
+    .toggle-switch { width: 2.5rem; height: 1.35rem; border-radius: 9999px; background: rgba(255,255,255,0.12); position: relative; cursor: pointer; transition: background 0.2s; }
+    .toggle-switch.on { background: var(--brand-primary); }
+    .toggle-switch::after {
+      content: "";
+      position: absolute;
+      top: 0.15rem;
+      left: 0.15rem;
+      width: 1.05rem;
+      height: 1.05rem;
+      border-radius: 9999px;
+      background: #fff;
+      transition: transform 0.2s;
+    }
+    .toggle-switch.on::after { transform: translateX(1.15rem); }
+    .field-input {
+      width: 100%;
+      border-radius: 0.75rem;
+      background: rgba(2, 6, 23, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.875rem;
+      color: #e2e8f0;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .field-input:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+    }
+    .field-input:disabled { opacity: 0.45; cursor: not-allowed; }
+    .integration-row {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(2, 6, 23, 0.45);
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+    .neon-toggle { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+    .neon-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .neon-toggle-track {
+      width: 2.75rem;
+      height: 1.5rem;
+      border-radius: 9999px;
+      background: rgba(51, 65, 85, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .neon-toggle-track::after {
+      content: "";
+      position: absolute;
+      top: 0.2rem;
+      left: 0.2rem;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 9999px;
+      background: #cbd5e1;
+      transition: transform 0.2s ease;
+    }
+    .neon-toggle input:checked + .neon-toggle-track {
+      background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));
+      border-color: color-mix(in srgb, var(--brand-primary) 60%, transparent);
+      box-shadow: 0 0 14px var(--brand-glow);
+    }
+    .neon-toggle input:checked + .neon-toggle-track::after {
+      transform: translateX(1.25rem);
+      background: #fff;
+    }
+    .neon-toggle input:disabled + .neon-toggle-track { opacity: 0.45; cursor: not-allowed; }
+    .toast-enter { animation: toast-in 0.25s ease forwards; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .health-healthy { color: #34d399; text-shadow: 0 0 16px rgba(52,211,153,0.4); }
+    .health-degraded { color: #fbbf24; text-shadow: 0 0 16px rgba(251,191,36,0.35); }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased">
+  <div id="toast-container" class="fixed top-5 right-5 z-[70] flex flex-col gap-3 max-w-sm"></div>
+
+  <div id="login-overlay" class="fixed inset-0 z-[60] login-backdrop flex items-center justify-center px-4">
+    <div class="glass w-full max-w-md rounded-2xl p-8 shadow-2xl border border-white/10">
+      <div class="text-center mb-8">
+        <div id="brand-logo" class="mx-auto mb-4 h-12 w-12 rounded-xl brand-btn flex items-center justify-center text-lg font-bold">OK</div>
+        <p id="login-brand-label" class="text-xs uppercase tracking-[0.35em] text-indigo-300/80">OmniKube CloudMetrics</p>
+        <h1 id="login-brand-title" class="text-2xl font-semibold mt-3 text-white">Sign in to continue</h1>
+        <p class="text-sm text-slate-400 mt-2">Multi-tenant RBAC — role-based dashboard access</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-username" class="block text-sm text-slate-300 mb-1.5">Username</label>
+          <input id="login-username" type="text" autocomplete="username" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="admin_user" />
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm text-slate-300 mb-1.5">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" required
+            class="w-full rounded-xl bg-slate-950/70 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="changeme" />
+        </div>
+        <p id="login-error" class="text-sm text-red-300 min-h-[1.25rem]"></p>
+        <button type="submit" id="login-submit-btn" class="brand-btn w-full rounded-xl py-2.5 text-sm font-medium text-white transition">Sign In</button>
+        <a href="/auth/login?return_to=/dashboard" class="mt-3 block w-full rounded-xl py-2.5 text-sm font-medium text-center text-indigo-100 border border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/20 transition">
+          Sign in with Enterprise SSO
+        </a>
+      </form>
+      <div class="mt-6 rounded-xl border border-white/5 bg-slate-950/40 p-4 text-xs text-slate-400 space-y-1">
+        <p class="text-slate-300 font-medium mb-2">Mock test accounts (password: <span class="text-indigo-200">changeme</span>)</p>
+        <p><span class="text-indigo-200">admin_user</span> — Admin (thresholds + layout)</p>
+        <p><span class="text-cyan-200">editor_user</span> — Editor (layout only)</p>
+        <p><span class="text-amber-200">viewer_user</span> — Viewer (read-only)</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-shell" class="hidden min-h-screen">
+    <aside class="sidebar-glass fixed inset-y-0 left-0 z-50 w-64 flex flex-col p-5">
+      <div class="mb-8">
+        <div class="flex items-center gap-3">
+          <div id="sidebar-brand-logo" class="h-10 w-10 rounded-lg brand-btn flex items-center justify-center text-sm font-bold shrink-0">OK</div>
+          <div class="min-w-0">
+            <p id="brand-label" class="text-[10px] uppercase tracking-[0.3em] text-slate-400 truncate">OmniKube</p>
+            <p id="brand-title" class="text-sm font-semibold text-white truncate">CloudMetrics</p>
+            <p id="brand-subtitle" class="text-[11px] text-slate-500 truncate">Enterprise Telemetry</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 space-y-1">
+        <a href="/dashboard" id="nav-dashboard" data-route="/dashboard" class="nav-link active">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Dashboard
+        </a>
+        <a href="/cost-optimization" id="nav-cost-optimization" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+          </svg>
+          Cost Optimization
+        </a>
+        <a href="/admin/settings" id="nav-admin-settings" data-route="/admin/settings" class="nav-link">
+          <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Admin Settings
+        </a>
+      </nav>
+      <div class="mt-auto pt-4 border-t border-white/5 text-xs text-slate-500">
+        <p>OmniKube v2.0</p>
+      </div>
+    </aside>
+
+    <main class="ml-64 flex-1 min-w-0 min-h-screen overflow-y-auto">
+      <header class="sticky top-0 z-40 glass-card border-b border-slate-800 px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <p id="page-eyebrow" class="text-[10px] uppercase tracking-[0.35em] text-slate-500 font-semibold">Command Center</p>
+          <h1 id="page-title" class="text-2xl md:text-3xl font-bold mt-1 tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Interactive Monitoring Grid</h1>
+          <p id="page-subtitle" class="text-slate-400 mt-1 text-sm">Drag and resize widgets — layout syncs to the server automatically.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
+            <span id="user-display" class="font-medium text-white">—</span>
+            <span class="text-slate-500 mx-1">·</span>
+            <span id="role-badge" class="text-indigo-300">—</span>
+          </div>
+          <button id="logout-button" class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-300 hover:text-white hover:border-red-400/30 transition">Sign Out</button>
+          <span id="layout-status" class="layout-status text-xs text-slate-500 hidden lg:inline">Layout synced</span>
+          <button id="open-threshold-settings" class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm text-slate-200 hover:border-indigo-400/40 hover:text-white transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Thresholds
+          </button>
+          <select id="timeframe-select" class="rounded-xl bg-slate-900/60 border border-white/10 px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="1h">Last 1 Hour</option>
+            <option value="6h">Last 6 Hours</option>
+            <option value="12h">Last 12 Hours</option>
+            <option value="24h" selected>Last 24 Hours</option>
+          </select>
+        </div>
+      </header>
+
+      <div class="p-6 space-y-6 max-w-[1400px]">
+        <section id="view-dashboard" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="metric-card glass-card rounded-2xl p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">CPU Cores</p>
+                  <p id="telemetry-cpu" class="text-3xl font-bold mt-2 text-indigo-200 tracking-tight">—</p>
+                  <p class="text-xs text-slate-500 mt-1">Cluster CPU utilization</p>
+                </div>
+                <div class="metric-icon-wrap metric-icon-cpu shrink-0">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <path stroke-linecap="round" d="M9 9h6v6H9zM9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="metric-card glass-card rounded-2xl p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">Memory</p>
+                  <p id="telemetry-memory" class="text-3xl font-bold mt-2 text-cyan-200 tracking-tight">—</p>
+                  <p class="text-xs text-slate-500 mt-1">Cluster memory pressure</p>
+                </div>
+                <div class="metric-icon-wrap metric-icon-memory shrink-0">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 8h16v8H4z"/>
+                    <path stroke-linecap="round" d="M7 11h2M7 14h2M11 11h2M11 14h2M15 11h2M15 14h2"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="metric-card glass-card rounded-2xl p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">Nodes</p>
+                  <p id="telemetry-active-nodes" class="text-3xl font-bold mt-2 text-emerald-200 tracking-tight">—</p>
+                  <p class="text-xs text-slate-500 mt-1">Ready nodes in cluster</p>
+                </div>
+                <div class="metric-icon-wrap metric-icon-nodes shrink-0">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16"/>
+                    <circle cx="17" cy="12" r="2"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="metric-card glass-card rounded-2xl p-5">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-semibold">Pods</p>
+                  <p id="telemetry-running-pods" class="text-3xl font-bold mt-2 text-violet-200 tracking-tight">—</p>
+                  <p id="telemetry-cluster-detail" class="text-xs text-slate-500 mt-1">Awaiting live snapshot</p>
+                </div>
+                <div class="metric-icon-wrap metric-icon-pods shrink-0">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/>
+                    <path stroke-linecap="round" d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p id="telemetry-cluster-health" class="sr-only">—</p>
+          <div class="grid-stack" id="dashboard-grid">
+            <div class="grid-stack-item" gs-id="cpu-chart" gs-x="0" gs-y="0" gs-w="6" gs-h="4">
+              <div class="grid-stack-item-content">
+                <div class="widget-panel glass-card p-5">
+                  <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-indigo-200">CPU Utilization</h2>
+                    <span id="cpu-live" class="text-2xl font-bold">--%</span>
+                  </div>
+                  <div class="widget-body"><canvas id="cpu-chart"></canvas></div>
+                </div>
+              </div>
+            </div>
+            <div class="grid-stack-item" gs-id="memory-chart" gs-x="6" gs-y="0" gs-w="6" gs-h="4">
+              <div class="grid-stack-item-content">
+                <div class="widget-panel glass-card p-5">
+                  <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-cyan-200">Memory Consumption</h2>
+                    <span id="memory-live" class="text-2xl font-bold">--%</span>
+                  </div>
+                  <div class="widget-body"><canvas id="memory-chart"></canvas></div>
+                </div>
+              </div>
+            </div>
+            <div class="grid-stack-item" gs-id="alert-buffer" gs-x="0" gs-y="4" gs-w="8" gs-h="3">
+              <div class="grid-stack-item-content">
+                <div class="widget-panel glass-card p-5">
+                  <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-amber-200">Alert Buffer Queue</h2>
+                    <div class="text-right text-xs text-slate-400">
+                      <p>Pending: <span id="alert-pending" class="text-amber-200 font-semibold">0</span></p>
+                      <p>Window: <span id="alert-window">60</span>s · <span id="alert-remaining">--</span>s left</p>
+                    </div>
+                  </div>
+                  <div class="widget-body overflow-y-auto">
+                    <table class="min-w-full text-sm">
+                      <thead class="text-left text-slate-400 border-b border-white/10">
+                        <tr>
+                          <th class="py-2 pr-4">Workload</th>
+                          <th class="py-2 pr-4">Metric</th>
+                          <th class="py-2 pr-4">Value</th>
+                          <th class="py-2">Cluster</th>
+                        </tr>
+                      </thead>
+                      <tbody id="alert-queue-body" class="divide-y divide-white/5">
+                        <tr><td colspan="4" class="py-3 text-slate-500">No buffered alerts</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid-stack-item" gs-id="integrations" gs-x="8" gs-y="4" gs-w="4" gs-h="3">
+              <div class="grid-stack-item-content">
+                <div class="widget-panel glass-card p-5">
+                  <h2 class="text-lg font-semibold text-violet-200 mb-3">Notification Channels</h2>
+                  <div class="widget-body overflow-y-auto space-y-3 text-sm">
+                    <label class="flex items-center gap-2">
+                      <input id="slack-enabled" type="checkbox" class="rounded border-white/20 bg-slate-900" />
+                      <span>Slack</span>
+                    </label>
+                    <input id="slack-webhook" type="url" placeholder="Slack webhook URL"
+                      class="w-full rounded-lg bg-slate-950/60 border border-white/10 px-3 py-2 text-xs text-white placeholder:text-slate-500" />
+                    <label class="flex items-center gap-2">
+                      <input id="discord-enabled" type="checkbox" class="rounded border-white/20 bg-slate-900" />
+                      <span>Discord</span>
+                    </label>
+                    <input id="discord-webhook" type="url" placeholder="Discord webhook URL"
+                      class="w-full rounded-lg bg-slate-950/60 border border-white/10 px-3 py-2 text-xs text-white placeholder:text-slate-500" />
+                    <p id="integrations-status" class="text-xs text-slate-500 min-h-[1rem]">Changes save automatically</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-admin-settings" class="hidden space-y-6 max-w-5xl">
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            <div class="glass rounded-2xl p-8 space-y-6">
+              <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Tenant Branding</p>
+                <h2 class="text-xl font-semibold text-white mt-1">Organization Settings</h2>
+                <p class="text-sm text-slate-400 mt-1">Customize accent colors and organization name across the portal.</p>
+              </div>
+              <div>
+                <label for="branding-company-name" class="block text-sm text-slate-300 mb-1.5">Organization Name</label>
+                <input id="branding-company-name" type="text"
+                  class="field-input"
+                  placeholder="OmniKube" />
+              </div>
+              <div>
+                <label for="branding-primary-color" class="block text-sm text-slate-300 mb-1.5">Accent Color</label>
+                <div class="flex items-center gap-3">
+                  <input id="branding-primary-color" type="color" value="#6366f1"
+                    class="h-11 w-16 rounded-lg border border-white/10 bg-transparent cursor-pointer" />
+                  <span id="branding-color-preview" class="text-sm text-slate-400">#6366f1</span>
+                </div>
+              </div>
+              <p id="branding-status" class="text-xs min-h-[1rem] text-slate-500"></p>
+              <button id="save-branding-btn" class="brand-btn rounded-xl px-5 py-2.5 text-sm font-medium text-white">Save Branding</button>
+            </div>
+
+            <div class="glass rounded-2xl p-8 space-y-6">
+              <div>
+                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Alert Routing</p>
+                <h2 class="text-xl font-semibold text-white mt-1">Notification Integrations</h2>
+                <p class="text-sm text-slate-400 mt-1">Route live threshold and cost alerts to your team channels.</p>
+              </div>
+
+              <div class="integration-row space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-indigo-200">Slack Webhook</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Incoming webhook for threshold breaches</p>
+                  </div>
+                  <label class="neon-toggle" title="Enable Slack alerts">
+                    <input id="settings-slack-enabled" type="checkbox" />
+                    <span class="neon-toggle-track"></span>
+                  </label>
+                </div>
+                <input id="settings-slack-webhook" type="url" class="field-input text-sm"
+                  placeholder="https://hooks.slack.com/services/..." />
+              </div>
+
+              <div class="integration-row space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-cyan-200">Discord Webhook</p>
+                    <p class="text-xs text-slate-500 mt-0.5">Embed alerts to a Discord channel</p>
+                  </div>
+                  <label class="neon-toggle" title="Enable Discord alerts">
+                    <input id="settings-discord-enabled" type="checkbox" />
+                    <span class="neon-toggle-track"></span>
+                  </label>
+                </div>
+                <input id="settings-discord-webhook" type="url" class="field-input text-sm"
+                  placeholder="https://discord.com/api/webhooks/..." />
+              </div>
+
+              <p id="settings-integrations-status" class="text-xs min-h-[1rem] text-slate-500">Changes save automatically</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="threshold-modal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop px-4">
+    <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-white/10">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <p class="text-xs uppercase tracking-[0.25em] text-indigo-300/80">Alert Engine</p>
+          <h2 class="text-xl font-semibold text-white mt-1">Threshold Configuration</h2>
+          <p class="text-sm text-slate-400 mt-1">Admin only — changes apply instantly.</p>
+        </div>
+        <button id="close-threshold-settings" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-6">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="cpu-threshold-input" class="text-sm font-medium text-indigo-200">CPU Alert Threshold</label>
+            <span id="cpu-threshold-value" class="text-sm font-semibold text-indigo-100">80%</span>
+          </div>
+          <input id="cpu-threshold-input" type="range" min="1" max="100" value="80" class="threshold-slider w-full" />
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label for="memory-threshold-input" class="text-sm font-medium text-cyan-200">Memory Alert Threshold</label>
+            <span id="memory-threshold-value" class="text-sm font-semibold text-cyan-100">80%</span>
+          </div>
+          <input id="memory-threshold-input" type="range" min="1" max="100" value="80" class="threshold-slider w-full" />
+        </div>
+      </div>
+      <p id="threshold-status" class="text-xs mt-5 min-h-[1rem] text-slate-500"></p>
+      <div class="flex justify-end gap-3 mt-2">
+        <button id="cancel-threshold-settings" class="rounded-xl px-4 py-2 text-sm text-slate-300 hover:text-white transition">Cancel</button>
+        <button id="save-threshold-settings" class="brand-btn rounded-xl px-4 py-2 text-sm font-medium text-white transition">Save &amp; Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ROLE_ADMIN = "Admin";
+    const ROLE_EDITOR = "Editor";
+    const ROLE_VIEWER = "Viewer";
+    const SESSION_TOKEN_KEY = "omnikube_session_token";
+    const AUTH_LOGIN_URL = "/api/v1/auth/login";
+    const AUTH_LOGOUT_URL = "/api/v1/auth/logout";
+    const AUTH_ME_URL = "/api/v1/auth/me";
+    const AUTH_SSO_URL = "/auth/login?return_to=/dashboard";
+    const ROUTE_MAP = {
+      "/": "dashboard",
+      "/dashboard": "dashboard",
+      "/admin/settings": "admin"
+    };
+    const VIEW_COPY = {
+      dashboard: {
+        title: "Interactive Monitoring Grid",
+        subtitle: "Drag and resize widgets — layout syncs to the server automatically."
+      },
+      admin: {
+        title: "Admin Settings",
+        subtitle: "Configure organization branding and portal appearance."
+      }
+    };
+
+    const jsonHeaders = { "Content-Type": "application/json" };
+    const fetchOptions = { credentials: "include" };
+
+    let currentUser = null;
+    let grid = null;
+    let cpuChart = null;
+    let memoryChart = null;
+    let layoutSaveTimer = null;
+    let refreshTimer = null;
+    let activeThresholds = { cpu: 80, memory: 80 };
+    let lastSavedLayout = [];
+    let dashboardBootstrapped = false;
+    let activeView = "dashboard";
+    let authRedirectSuspended = false;
+    let tenantBranding = null;
+
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY);
+    }
+
+    function setSessionToken(token) {
+      if (token) sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    }
+
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
+    function buildAuthHeaders(extraHeaders = {}) {
+      const headers = { ...jsonHeaders, ...extraHeaders };
+      const token = getSessionToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+      return headers;
+    }
+
+    function applySessionBootstrap() {
+      const bootstrap = window.__OMNIKUBE_SESSION__;
+      if (!bootstrap) return;
+      currentUser = {
+        ...(currentUser || {}),
+        username: bootstrap.username,
+        role: bootstrap.role,
+        tenant_id: bootstrap.tenant_id,
+        organization_id: bootstrap.organization_id,
+        email: bootstrap.email,
+        display_name: bootstrap.display_name,
+        auth_provider: bootstrap.auth_provider,
+      };
+    }
+
+    function getOrganizationScope() {
+      return currentUser?.organization_id
+        || window.__OMNIKUBE_SESSION__?.organization_id
+        || "default";
+    }
+
+    function withOrgScope(url) {
+      const orgId = getOrganizationScope();
+      if (!orgId || url.includes("organization_id=")) return url;
+      const joiner = url.includes("?") ? "&" : "?";
+      return `${url}${joiner}organization_id=${encodeURIComponent(orgId)}`;
+    }
+
+    function showToast(message, type = "error") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const palette = type === "error"
+        ? "border-red-400/30 bg-red-950/80 text-red-100"
+        : "border-emerald-400/30 bg-emerald-950/80 text-emerald-100";
+      toast.className = `toast-enter glass rounded-xl border px-4 py-3 text-sm shadow-xl ${palette}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity 0.3s ease";
+        setTimeout(() => toast.remove(), 300);
+      }, 4500);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(withOrgScope(url), {
+        ...fetchOptions,
+        ...options,
+        headers: buildAuthHeaders(options.headers || {})
+      });
+      let payload = null;
+      try { payload = await response.json(); } catch (_) { payload = null; }
+      if (response.status === 401) {
+        if (!authRedirectSuspended) showLogin();
+        throw new Error(payload?.error || "Session expired. Please sign in again.");
+      }
+      if (response.status === 403) {
+        showToast(payload?.error || "Forbidden. Your role cannot perform this action.");
+        const err = new Error(payload?.error || "Forbidden");
+        err.status = 403;
+        err.payload = payload;
+        throw err;
+      }
+      if (!response.ok) {
+        throw new Error(payload?.error || `Request failed (${response.status})`);
+      }
+      return payload;
+    }
+
+    function hexToRgb(hex) {
+      const normalized = String(hex || "").replace("#", "").trim();
+      if (normalized.length !== 6) return { r: 99, g: 102, b: 241 };
+      return {
+        r: parseInt(normalized.slice(0, 2), 16),
+        g: parseInt(normalized.slice(2, 4), 16),
+        b: parseInt(normalized.slice(4, 6), 16)
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+      return "#" + [r, g, b].map((c) => clamp(c).toString(16).padStart(2, "0")).join("");
+    }
+
+    function darkenColor(hex, percent) {
+      const { r, g, b } = hexToRgb(hex);
+      const factor = 1 - percent / 100;
+      return rgbToHex(r * factor, g * factor, b * factor);
+    }
+
+    function applyTenantBranding(branding) {
+      if (!branding) return;
+      tenantBranding = branding;
+      const primary = branding.primary_color || "#6366f1";
+      const secondary = branding.secondary_color || darkenColor(primary, 15);
+      const company = branding.company_name || "OmniKube";
+      document.documentElement.style.setProperty("--brand-primary", primary);
+      document.documentElement.style.setProperty("--brand-secondary", secondary);
+      document.documentElement.style.setProperty("--brand-glow", `color-mix(in srgb, ${primary} 35%, transparent)`);
+      const initials = company.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "OK";
+      ["brand-logo", "sidebar-brand-logo"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = initials;
+      });
+      const labelEl = document.getElementById("brand-label");
+      if (labelEl) labelEl.textContent = company;
+      const titleEl = document.getElementById("brand-title");
+      if (titleEl) titleEl.textContent = "CloudMetrics";
+      const subEl = document.getElementById("brand-subtitle");
+      if (subEl) subEl.textContent = "Enterprise Telemetry";
+      const loginLabel = document.getElementById("login-brand-label");
+      if (loginLabel) loginLabel.textContent = company;
+      document.title = `${company} | CloudMetrics Command Center`;
+      const preview = document.getElementById("branding-color-preview");
+      if (preview) preview.textContent = primary;
+      const nameInput = document.getElementById("branding-company-name");
+      if (nameInput && document.activeElement !== nameInput) nameInput.value = company;
+      const colorInput = document.getElementById("branding-primary-color");
+      if (colorInput && document.activeElement !== colorInput) colorInput.value = primary;
+    }
+
+    async function loadTenantBranding() {
+      try {
+        const payload = await apiFetch("/api/v1/tenant/branding");
+        if (payload?.branding) applyTenantBranding(payload.branding);
+      } catch (error) {
+        if (error.status !== 403 && error.status !== 401) {
+          console.warn("[Branding] Load failed:", error.message);
+        }
+      }
+    }
+
+    function parseLabels(record) {
+      if (!record || !record.labels) return {};
+      if (typeof record.labels === "object") return record.labels;
+      try { return JSON.parse(record.labels); } catch (_) { return {}; }
+    }
+
+    function isClusterSnapshot(record) {
+      const labels = parseLabels(record);
+      return labels.metric_type === "cluster_snapshot"
+        || labels.source === "k8s_live_telemetry"
+        || record.granularity === "cluster_snapshot";
+    }
+
+    function filterChartRecords(records) {
+      return (records || []).filter((r) => !isClusterSnapshot(r));
+    }
+
+    function updateTelemetryCards(records) {
+      const snapshots = (records || []).filter(isClusterSnapshot);
+      const chartRows = filterChartRecords(records);
+      const cpuEl = document.getElementById("telemetry-cpu");
+      const memoryEl = document.getElementById("telemetry-memory");
+      const detailEl = document.getElementById("telemetry-cluster-detail");
+      const nodesEl = document.getElementById("telemetry-active-nodes");
+      const podsEl = document.getElementById("telemetry-running-pods");
+      const healthEl = document.getElementById("telemetry-cluster-health");
+
+      let cpuPct = null;
+      let memPct = null;
+
+      if (snapshots.length) {
+        const latest = snapshots[0];
+        const labels = parseLabels(latest);
+        cpuPct = Number(latest.cpu ?? labels.cpu_utilization ?? latest.cpu_utilization);
+        memPct = Number(latest.memory ?? labels.memory_utilization ?? latest.memory_utilization);
+        const runningPods = Number(labels.running_pods ?? latest.cpu ?? 0);
+        const readyNodes = Number(labels.ready_nodes ?? latest.memory ?? 0);
+        podsEl.textContent = String(Math.round(runningPods));
+        nodesEl.textContent = String(Math.round(readyNodes));
+        detailEl.textContent = `${labels.cluster_id || "omnikube-cluster"} · ${latest.timestamp || "recent"}`;
+        healthEl.textContent = readyNodes > 0 ? "Healthy" : "Degraded";
+      } else if (chartRows.length) {
+        const latest = chartRows[0];
+        cpuPct = Number(latest.cpu);
+        memPct = Number(latest.memory);
+        podsEl.textContent = "—";
+        nodesEl.textContent = "—";
+        detailEl.textContent = "Live workload metrics (no cluster snapshot)";
+        healthEl.textContent = "Unknown";
+      } else {
+        cpuEl.textContent = "—";
+        memoryEl.textContent = "—";
+        podsEl.textContent = "—";
+        nodesEl.textContent = "—";
+        detailEl.textContent = "No cluster snapshot received";
+        healthEl.textContent = "Degraded";
+        return;
+      }
+
+      cpuEl.textContent = Number.isFinite(cpuPct) ? `${cpuPct.toFixed(1)}%` : "—";
+      memoryEl.textContent = Number.isFinite(memPct) ? `${memPct.toFixed(1)}%` : "—";
+    }
+
+    function resolveActiveViewFromPath(pathname) {
+      const path = pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+      return ROUTE_MAP[path] || "dashboard";
+    }
+
+    function updatePageCopy(view) {
+      const copy = VIEW_COPY[view] || VIEW_COPY.dashboard;
+      document.getElementById("page-title").textContent = copy.title;
+      document.getElementById("page-subtitle").textContent = copy.subtitle;
+    }
+
+    function updateNavActive(view) {
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        const route = link.getAttribute("data-route");
+        const linkView = ROUTE_MAP[route] || "dashboard";
+        link.classList.toggle("active", linkView === view);
+      });
+      const thresholdBtn = document.getElementById("open-threshold-settings");
+      const timeframeSelect = document.getElementById("timeframe-select");
+      const layoutStatus = document.getElementById("layout-status");
+      const showDashControls = view === "dashboard";
+      thresholdBtn.classList.toggle("hidden", !showDashControls);
+      timeframeSelect.classList.toggle("hidden", !showDashControls);
+      layoutStatus.classList.toggle("hidden", !showDashControls);
+    }
+
+    function stopRefreshTimer() {
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    }
+
+    function startRefreshTimer() {
+      stopRefreshTimer();
+      refreshTimer = setInterval(refreshDashboard, 5000);
+    }
+
+    function showView(view, pushState = false) {
+      activeView = view;
+      document.getElementById("view-dashboard").classList.toggle("hidden", view !== "dashboard");
+      document.getElementById("view-admin-settings").classList.toggle("hidden", view !== "admin");
+      updatePageCopy(view);
+      updateNavActive(view);
+      const path = Object.keys(ROUTE_MAP).find((k) => ROUTE_MAP[k] === view) || "/";
+      if (pushState) history.pushState({ view }, "", path);
+      if (view === "dashboard") {
+        if (!dashboardBootstrapped) bootstrapDashboard();
+        startRefreshTimer();
+        refreshDashboard();
+      } else {
+        stopRefreshTimer();
+        if (view === "admin") loadIntegrations();
+      }
+    }
+
+    function showLogin() {
+      stopRefreshTimer();
+      currentUser = null;
+      document.getElementById("login-overlay").classList.remove("hidden");
+      document.getElementById("app-shell").classList.add("hidden");
+    }
+
+    function showAppShell() {
+      document.getElementById("login-overlay").classList.add("hidden");
+      document.getElementById("app-shell").classList.remove("hidden");
+      document.getElementById("user-display").textContent = currentUser.username;
+      document.getElementById("role-badge").textContent = currentUser.role;
+      const thresholdBtn = document.getElementById("open-threshold-settings");
+      if (currentUser.role === ROLE_ADMIN) {
+        thresholdBtn.classList.remove("hidden");
+        thresholdBtn.disabled = false;
+      } else {
+        thresholdBtn.classList.add("hidden");
+      }
+      applyGridPermissions();
+      syncIntegrationInputStates();
+    }
+
+    function applyGridPermissions() {
+      if (!grid) return;
+      const canEditLayout = currentUser.role === ROLE_ADMIN || currentUser.role === ROLE_EDITOR;
+      grid.setStatic(!canEditLayout);
+    }
+
+    async function checkSession() {
+      applySessionBootstrap();
+      try {
+        const payload = await apiFetch(AUTH_ME_URL);
+        currentUser = payload.user;
+        return true;
+      } catch (_) {
+        return Boolean(window.__OMNIKUBE_SESSION__?.organization_id);
+      }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+      try {
+        const response = await fetch(AUTH_LOGIN_URL, {
+          method: "POST",
+          credentials: "include",
+          headers: jsonHeaders,
+          body: JSON.stringify({ username, password })
+        });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || "Login failed");
+        if (body.token) setSessionToken(body.token);
+        currentUser = body.user;
+        showAppShell();
+        await loadTenantBranding();
+        const view = resolveActiveViewFromPath(window.location.pathname);
+        showView(view);
+      } catch (error) {
+        errorEl.textContent = error.message || "Login failed";
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch(AUTH_LOGOUT_URL, { method: "POST", credentials: "include", headers: buildAuthHeaders() });
+      } catch (_) {}
+      clearSessionToken();
+      showLogin();
+    }
+
+    function setThresholdStatus(message, isError = false) {
+      const el = document.getElementById("threshold-status");
+      el.textContent = message;
+      el.className = `text-xs mt-5 min-h-[1rem] ${isError ? "text-red-300" : "text-emerald-300"}`;
+    }
+
+    function updateThresholdLabels() {
+      const cpu = Number(document.getElementById("cpu-threshold-input").value);
+      const memory = Number(document.getElementById("memory-threshold-input").value);
+      document.getElementById("cpu-threshold-value").textContent = `${cpu}%`;
+      document.getElementById("memory-threshold-value").textContent = `${memory}%`;
+    }
+
+    function openThresholdModal() {
+      if (currentUser?.role !== ROLE_ADMIN) {
+        showToast("Only Admin users can modify alert thresholds.");
+        return;
+      }
+      document.getElementById("cpu-threshold-input").value = String(activeThresholds.cpu);
+      document.getElementById("memory-threshold-input").value = String(activeThresholds.memory);
+      updateThresholdLabels();
+      setThresholdStatus("");
+      const modal = document.getElementById("threshold-modal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeThresholdModal() {
+      const modal = document.getElementById("threshold-modal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    async function loadThresholdSettings() {
+      try {
+        const payload = await apiFetch("/api/config/thresholds");
+        activeThresholds = {
+          cpu: Number(payload.cpu ?? 80),
+          memory: Number(payload.memory ?? 80)
+        };
+      } catch (error) {
+        if (error.status !== 403) console.error("[Dashboard Thresholds] Load failed:", error);
+      }
+    }
+
+    async function saveThresholdSettings() {
+      if (currentUser?.role !== ROLE_ADMIN) {
+        showToast("Only Admin users can modify alert thresholds.");
+        return;
+      }
+      const cpu = Number(document.getElementById("cpu-threshold-input").value);
+      const memory = Number(document.getElementById("memory-threshold-input").value);
+      setThresholdStatus("Applying thresholds...");
+      try {
+        const result = await apiFetch("/api/config/thresholds", {
+          method: "POST",
+          body: JSON.stringify({ cpu, memory })
+        });
+        activeThresholds = {
+          cpu: Number(result.cpu ?? cpu),
+          memory: Number(result.memory ?? memory)
+        };
+        setThresholdStatus("Thresholds hot-reloaded successfully.");
+        showToast("Thresholds updated successfully.", "success");
+        setTimeout(closeThresholdModal, 700);
+      } catch (error) {
+        setThresholdStatus(error.message || "Threshold save failed", true);
+      }
+    }
+
+    function showLayoutStatus(message, isError = false) {
+      const el = document.getElementById("layout-status");
+      el.textContent = message;
+      el.className = `layout-status text-xs ${isError ? "text-red-300" : "text-emerald-300"}`;
+    }
+
+    function serializeLayout() {
+      if (!grid) return [];
+      return grid.save(false).map((item) => ({
+        id: item.id, x: item.x, y: item.y, w: item.w, h: item.h
+      }));
+    }
+
+    async function persistLayout() {
+      if (currentUser?.role === ROLE_VIEWER) {
+        showToast("Viewer accounts cannot modify the widget layout.");
+        if (lastSavedLayout.length) grid.load(lastSavedLayout);
+        return;
+      }
+      const layout = serializeLayout();
+      try {
+        const result = await apiFetch("/api/widgets/layout", {
+          method: "POST",
+          body: JSON.stringify({ layout })
+        });
+        lastSavedLayout = result.layout || layout;
+        showLayoutStatus(`Layout saved (${layout.length} widgets)`);
+      } catch (error) {
+        showLayoutStatus(error.message || "Layout save failed", true);
+        if (lastSavedLayout.length) grid.load(lastSavedLayout);
+      }
+    }
+
+    function scheduleLayoutSave() {
+      if (currentUser?.role === ROLE_VIEWER) return;
+      clearTimeout(layoutSaveTimer);
+      layoutSaveTimer = setTimeout(persistLayout, 400);
+    }
+
+    async function loadSavedLayout() {
+      try {
+        const payload = await apiFetch("/api/widgets/layout");
+        const layout = payload.layout || [];
+        lastSavedLayout = layout;
+        if (!layout.length || !grid) return;
+        grid.load(layout);
+        showLayoutStatus(`Layout restored (${layout.length} widgets)`);
+      } catch (error) {
+        console.error("[Dashboard Layout] Load failed:", error);
+      }
+    }
+
+    function initGrid() {
+      grid = GridStack.init({
+        column: 12,
+        cellHeight: 90,
+        margin: 12,
+        float: true,
+        animate: true,
+        draggable: { handle: ".widget-panel h2" },
+        resizable: { handles: "se" }
+      }, "#dashboard-grid");
+      grid.on("change", () => {
+        if (currentUser?.role === ROLE_VIEWER) {
+          showToast("Viewer accounts cannot modify the widget layout.");
+          if (lastSavedLayout.length) grid.load(lastSavedLayout);
+          return;
+        }
+        showLayoutStatus("Layout changed — saving...");
+        scheduleLayoutSave();
+      });
+      grid.on("resizestop", () => {
+        cpuChart?.resize();
+        memoryChart?.resize();
+      });
+    }
+
+    function initCharts() {
+      const primary = getComputedStyle(document.documentElement).getPropertyValue("--brand-primary").trim() || "#818cf8";
+      const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: "index",
+            intersect: false,
+            backgroundColor: "rgba(15, 23, 42, 0.95)",
+            titleColor: "#e2e8f0",
+            bodyColor: "#cbd5e1"
+          }
+        },
+        scales: {
+          x: { ticks: { color: "#94a3b8", maxTicksLimit: 6 }, grid: { color: "rgba(255,255,255,0.05)" } },
+          y: { min: 0, max: 100, ticks: { color: "#94a3b8" }, grid: { color: "rgba(255,255,255,0.05)" } }
+        }
+      };
+      cpuChart = new Chart(document.getElementById("cpu-chart"), {
+        type: "line",
+        data: { labels: [], datasets: [{ data: [], borderColor: primary, backgroundColor: "rgba(129,140,248,0.15)", tension: 0.35, fill: true, pointRadius: 2 }] },
+        options: chartDefaults
+      });
+      memoryChart = new Chart(document.getElementById("memory-chart"), {
+        type: "line",
+        data: { labels: [], datasets: [{ data: [], borderColor: "#22d3ee", backgroundColor: "rgba(34,211,238,0.12)", tension: 0.35, fill: true, pointRadius: 2 }] },
+        options: chartDefaults
+      });
+    }
+
+    function updateCharts(records) {
+      const workloadRecords = filterChartRecords(records);
+      if (!workloadRecords.length) return;
+      const chronological = [...workloadRecords].reverse();
+      const labels = chronological.map((r) => (r.timestamp || "").split(" ").slice(-2).join(" "));
+      const cpuData = chronological.map((r) => Number(r.cpu));
+      const memoryData = chronological.map((r) => Number(r.memory));
+      const latest = workloadRecords[0];
+      document.getElementById("cpu-live").textContent = `${Math.round(latest.cpu)}%`;
+      document.getElementById("memory-live").textContent = `${Math.round(latest.memory)}%`;
+      cpuChart.data.labels = labels;
+      cpuChart.data.datasets[0].data = cpuData;
+      cpuChart.update("none");
+      memoryChart.data.labels = labels;
+      memoryChart.data.datasets[0].data = memoryData;
+      memoryChart.update("none");
+    }
+
+    function renderAlertQueue(status) {
+      document.getElementById("alert-pending").textContent = status.pending_count;
+      document.getElementById("alert-window").textContent = status.window_seconds;
+      document.getElementById("alert-remaining").textContent = status.window_remaining_seconds;
+      const tbody = document.getElementById("alert-queue-body");
+      if (!status.events.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="py-3 text-slate-500">No buffered alerts</td></tr>';
+        return;
+      }
+      tbody.innerHTML = status.events.map((event) => `
+        <tr class="hover:bg-white/5">
+          <td class="py-2 pr-4">${event.namespace}/${event.pod_name}</td>
+          <td class="py-2 pr-4 uppercase text-amber-200">${event.metric}</td>
+          <td class="py-2 pr-4">${event.value}% / ${event.threshold}%</td>
+          <td class="py-2">${event.cluster_id}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function refreshDashboard() {
+      if (activeView !== "dashboard") return;
+      const timeframe = document.getElementById("timeframe-select").value;
+      try {
+        const [metrics, bufferStatus] = await Promise.all([
+          apiFetch(`/api/metrics?timeframe=${encodeURIComponent(timeframe)}`),
+          apiFetch("/api/alerts/buffer")
+        ]);
+        updateTelemetryCards(metrics);
+        updateCharts(metrics);
+        renderAlertQueue(bufferStatus);
+      } catch (error) {
+        if (error.status !== 403) console.error("[Dashboard] Refresh failed:", error);
+      }
+    }
+
+    let integrationsSaveTimer = null;
+
+    const NOTIFICATION_FIELD_GROUPS = {
+      slackEnabled: ["settings-slack-enabled", "slack-enabled"],
+      slackWebhook: ["settings-slack-webhook", "slack-webhook"],
+      discordEnabled: ["settings-discord-enabled", "discord-enabled"],
+      discordWebhook: ["settings-discord-webhook", "discord-webhook"],
+    };
+
+    function notificationField(groupKey) {
+      const ids = NOTIFICATION_FIELD_GROUPS[groupKey] || [];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el) return el;
+      }
+      return null;
+    }
+
+    function setNotificationFieldValue(groupKey, value, isCheckbox = false) {
+      const ids = NOTIFICATION_FIELD_GROUPS[groupKey] || [];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (isCheckbox) el.checked = Boolean(value);
+        else el.value = value || "";
+      });
+    }
+
+    function buildNotificationsPayload() {
+      return {
+        slack: {
+          enabled: Boolean(notificationField("slackEnabled")?.checked),
+          webhook_url: String(notificationField("slackWebhook")?.value || "").trim()
+        },
+        discord: {
+          enabled: Boolean(notificationField("discordEnabled")?.checked),
+          webhook_url: String(notificationField("discordWebhook")?.value || "").trim()
+        }
+      };
+    }
+
+    function syncIntegrationInputStates() {
+      const isAdmin = currentUser?.role === ROLE_ADMIN;
+      const slackEnabled = Boolean(notificationField("slackEnabled")?.checked);
+      const discordEnabled = Boolean(notificationField("discordEnabled")?.checked);
+
+      NOTIFICATION_FIELD_GROUPS.slackEnabled.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !isAdmin;
+      });
+      NOTIFICATION_FIELD_GROUPS.discordEnabled.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !isAdmin;
+      });
+      NOTIFICATION_FIELD_GROUPS.slackWebhook.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !isAdmin || !slackEnabled;
+      });
+      NOTIFICATION_FIELD_GROUPS.discordWebhook.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = !isAdmin || !discordEnabled;
+      });
+    }
+
+    function applyNotificationData(data) {
+      setNotificationFieldValue("slackEnabled", data.slack?.enabled, true);
+      setNotificationFieldValue("slackWebhook", data.slack?.webhook_url || "");
+      setNotificationFieldValue("discordEnabled", data.discord?.enabled, true);
+      setNotificationFieldValue("discordWebhook", data.discord?.webhook_url || "");
+      syncIntegrationInputStates();
+    }
+
+    async function loadIntegrations() {
+      try {
+        const payload = await apiFetch("/api/v1/settings/notifications");
+        const data = payload.notifications || payload;
+        applyNotificationData(data);
+      } catch (error) {
+        if (error.status !== 403) console.error("[Integrations] Load failed:", error);
+      }
+    }
+
+    function setIntegrationsStatus(message, isError = false) {
+      const className = isError
+        ? "text-xs min-h-[1rem] text-red-300"
+        : message === "Saved"
+          ? "text-xs min-h-[1rem] text-emerald-300"
+          : "text-xs min-h-[1rem] text-slate-400";
+      ["integrations-status", "settings-integrations-status"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = message;
+        el.className = className;
+      });
+    }
+
+    async function saveIntegrations(showSuccessToast = false) {
+      if (currentUser?.role === ROLE_VIEWER) {
+        showToast("Viewer accounts cannot modify integrations.");
+        return;
+      }
+      if (currentUser?.role !== ROLE_ADMIN) {
+        return;
+      }
+      setIntegrationsStatus("Saving...");
+      try {
+        await apiFetch("/api/v1/settings/notifications", {
+          method: "POST",
+          body: JSON.stringify(buildNotificationsPayload())
+        });
+        setIntegrationsStatus("Saved");
+        if (showSuccessToast) showToast("Notification channels updated.", "success");
+      } catch (error) {
+        setIntegrationsStatus(error.message || "Save failed", true);
+      }
+    }
+
+    function scheduleIntegrationsSave(immediate = false) {
+      if (currentUser?.role !== ROLE_ADMIN) return;
+      clearTimeout(integrationsSaveTimer);
+      integrationsSaveTimer = setTimeout(() => saveIntegrations(false), immediate ? 0 : 450);
+    }
+
+    function wireNotificationIntegrationListeners() {
+      const toggleIds = [
+        ...NOTIFICATION_FIELD_GROUPS.slackEnabled,
+        ...NOTIFICATION_FIELD_GROUPS.discordEnabled,
+      ];
+      const inputIds = [
+        ...NOTIFICATION_FIELD_GROUPS.slackWebhook,
+        ...NOTIFICATION_FIELD_GROUPS.discordWebhook,
+      ];
+
+      toggleIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.integrationWired === "1") return;
+        el.dataset.integrationWired = "1";
+        el.addEventListener("change", () => {
+          if (NOTIFICATION_FIELD_GROUPS.slackEnabled.includes(id)) {
+            setNotificationFieldValue("slackEnabled", el.checked, true);
+          } else if (NOTIFICATION_FIELD_GROUPS.discordEnabled.includes(id)) {
+            setNotificationFieldValue("discordEnabled", el.checked, true);
+          }
+          syncIntegrationInputStates();
+          scheduleIntegrationsSave(true);
+        });
+      });
+
+      inputIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.integrationWired === "1") return;
+        el.dataset.integrationWired = "1";
+        el.addEventListener("input", () => {
+          if (id.includes("slack")) {
+            setNotificationFieldValue("slackWebhook", el.value);
+          } else if (id.includes("discord")) {
+            setNotificationFieldValue("discordWebhook", el.value);
+          }
+          scheduleIntegrationsSave(false);
+        });
+        el.addEventListener("change", () => scheduleIntegrationsSave(false));
+      });
+    }
+
+    async function saveBranding() {
+      if (currentUser?.role === ROLE_VIEWER) {
+        showToast("Viewer accounts cannot update branding.");
+        return;
+      }
+      const statusEl = document.getElementById("branding-status");
+      const company_name = document.getElementById("branding-company-name").value.trim();
+      const primary_color = document.getElementById("branding-primary-color").value;
+      const secondary_color = darkenColor(primary_color, 15);
+      if (!company_name) {
+        statusEl.textContent = "Organization name is required.";
+        statusEl.className = "text-xs text-red-300 min-h-[1rem]";
+        return;
+      }
+      statusEl.textContent = "Saving…";
+      try {
+        const result = await apiFetch("/api/v1/tenant/branding", {
+          method: "PUT",
+          body: JSON.stringify({ company_name, primary_color, secondary_color })
+        });
+        applyTenantBranding(result.branding);
+        statusEl.textContent = "Branding saved and applied.";
+        statusEl.className = "text-xs text-emerald-300 min-h-[1rem]";
+        showToast("Branding updated.", "success");
+      } catch (error) {
+        statusEl.textContent = error.message || "Save failed";
+        statusEl.className = "text-xs text-red-300 min-h-[1rem]";
+      }
+    }
+
+    async function bootstrapDashboard() {
+      if (dashboardBootstrapped) return;
+      initGrid();
+      initCharts();
+      applyGridPermissions();
+      await loadThresholdSettings();
+      await loadSavedLayout();
+      await loadIntegrations();
+      await refreshDashboard();
+      dashboardBootstrapped = true;
+    }
+
+    document.getElementById("login-form").addEventListener("submit", handleLogin);
+    document.getElementById("logout-button").addEventListener("click", handleLogout);
+    document.getElementById("timeframe-select").addEventListener("change", refreshDashboard);
+    document.getElementById("open-threshold-settings").addEventListener("click", openThresholdModal);
+    document.getElementById("close-threshold-settings").addEventListener("click", closeThresholdModal);
+    document.getElementById("cancel-threshold-settings").addEventListener("click", closeThresholdModal);
+    document.getElementById("save-threshold-settings").addEventListener("click", saveThresholdSettings);
+    document.getElementById("cpu-threshold-input").addEventListener("input", updateThresholdLabels);
+    document.getElementById("memory-threshold-input").addEventListener("input", updateThresholdLabels);
+    document.getElementById("threshold-modal").addEventListener("click", (e) => {
+      if (e.target.id === "threshold-modal") closeThresholdModal();
+    });
+    wireNotificationIntegrationListeners();
+    document.getElementById("save-branding-btn").addEventListener("click", saveBranding);
+    document.getElementById("branding-primary-color").addEventListener("input", (e) => {
+      document.getElementById("branding-color-preview").textContent = e.target.value;
+    });
+
+    document.querySelectorAll(".nav-link[data-route]").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const route = link.getAttribute("data-route");
+        const view = ROUTE_MAP[route] || "dashboard";
+        showView(view, true);
+      });
+    });
+
+    window.addEventListener("popstate", () => {
+      if (!currentUser) return;
+      showView(resolveActiveViewFromPath(window.location.pathname));
+    });
+
+    (async function initApp() {
+      applySessionBootstrap();
+      authRedirectSuspended = true;
+      const hasSession = await checkSession();
+      authRedirectSuspended = false;
+      if (hasSession) {
+        showAppShell();
+        await loadTenantBranding();
+        showView(resolveActiveViewFromPath(window.location.pathname));
+      } else {
+        showLogin();
+      }
+    })();
+  </script>
+</body>
+</html>

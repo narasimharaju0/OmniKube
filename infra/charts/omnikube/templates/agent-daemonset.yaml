@@ -1,0 +1,47 @@
+{{- if .Values.agent.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "omnikube.fullname" . }}-agent
+  labels:
+    {{- include "omnikube.agent.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "omnikube.agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "omnikube.agent.selectorLabels" . | nindent 8 }}
+        {{- if .Values.agent.scrapeLabel }}
+        omnikube.io/scrape: "true"
+        {{- end }}
+    spec:
+      containers:
+        - name: omnikube-agent
+          image: {{ include "omnikube.agent.image" . }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+          env:
+            - name: OMNIKUBE_CLUSTER_ID
+              value: {{ .Values.global.clusterId | quote }}
+            - name: OMNIKUBE_REGION
+              value: {{ .Values.global.region | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "omnikube.fullname" . }}-agent
+  labels:
+    {{- include "omnikube.agent.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.agent.service.type }}
+  selector:
+    {{- include "omnikube.agent.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.agent.service.port }}
+      targetPort: {{ .Values.agent.service.targetPort }}
+      protocol: TCP
+{{- end }}

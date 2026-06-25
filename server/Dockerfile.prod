@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1
+
+# -----------------------------------------------------------------------------
+# Stage 1 — Builder: compile wheels for reproducible, cache-friendly installs
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /build
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+RUN pip wheel --wheel-dir /wheels -r requirements.txt
+
+# -----------------------------------------------------------------------------
+# Stage 2 — Runner: minimal runtime image with non-root execution
+# -----------------------------------------------------------------------------
+FROM python:3.11-slim AS runner
+
+ENV FLASK_ENV=production \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    OMNIKUBE_DATA_DIR=/data \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 omnikube \
+    && useradd --uid 10001 --gid 10001 --home /app --shell /usr/sbin/nologin omnikube \
+    && mkdir -p /data /app/.test_data \
+    && chown -R omnikube:omnikube /app /data
+
+COPY --from=builder /wheels /wheels
+COPY requirements.txt .
+
+RUN pip install --no-index --find-links=/wheels -r requirements.txt \
+    && rm -rf /wheels
+
+COPY --chown=omnikube:omnikube app.py .
+COPY --chown=omnikube:omnikube core/ core/
+COPY --chown=omnikube:omnikube templates/ templates/
+COPY --chown=omnikube:omnikube static/ static/
+
+USER omnikube
+
+EXPOSE 5000
+
+# app.py starts the HTTP gateway and background metrics_collector daemons.
+ENTRYPOINT ["python", "-u", "app.py"]

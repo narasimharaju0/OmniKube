@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         app: omnikube-agent
+        omnikube.io/scrape: "true"
     spec:
       containers:
         - name: omnikube-agent
