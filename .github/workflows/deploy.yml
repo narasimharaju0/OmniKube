@@ -13,6 +13,10 @@ jobs:
     name: Build and Validate
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./server
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -24,12 +28,14 @@ jobs:
           cache: pip
           cache-dependency-path: server/requirements.txt
 
-      - name: Lint and syntax-check server code
-        working-directory: server
-        run: |
-          python -m compileall -q app.py core
-          pip install -r requirements.txt
-          python -c "import app; print('app module import OK')"
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Syntax-check server code
+        run: python -m compileall -q app.py core
+
+      - name: Verify application import
+        run: python -c "import app; print('app module import OK')"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,8 +43,8 @@ jobs:
       - name: Build production image (placeholder)
         uses: docker/build-push-action@v6
         with:
-          context: ./server
-          file: ./server/Dockerfile.prod
+          context: server
+          file: server/Dockerfile.prod
           push: false
           tags: omnikube-server:latest
           cache-from: type=gha
