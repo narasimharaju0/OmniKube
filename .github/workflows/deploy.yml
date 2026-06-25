@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-validate:
+    name: Build and Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: server/requirements.txt
+
+      - name: Lint and syntax-check server code
+        working-directory: server
+        run: |
+          python -m compileall -q app.py core
+          pip install -r requirements.txt
+          python -c "import app; print('app module import OK')"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build production image (placeholder)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          file: ./server/Dockerfile.prod
+          push: false
+          tags: omnikube-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
