@@ -31,11 +31,15 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Syntax-check server code
-        run: python -m compileall -q app.py core
-
-      - name: Verify application import
-        run: python -c "import app; print('app module import OK')"
+      - name: Validate and smoke-test server application
+        env:
+          STRIPE_SECRET_KEY: "mock_key_for_ci"
+          STRIPE_WEBHOOK_SECRET: "mock_secret_for_ci"
+          LOG_LEVEL: "DEBUG"
+          OMNIKUBE_DATA_DIR: "./.ci-data"
+        run: |
+          python -m compileall -q .
+          python -c "import app; print('App smoke test passed successfully!')"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -43,8 +47,8 @@ jobs:
       - name: Build production image (placeholder)
         uses: docker/build-push-action@v6
         with:
-          context: server
-          file: server/Dockerfile.prod
+          context: ./server
+          file: ./Dockerfile.prod
           push: false
           tags: omnikube-server:latest
           cache-from: type=gha
